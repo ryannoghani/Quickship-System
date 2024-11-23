@@ -1,38 +1,217 @@
 .App {
   text-align: center;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  height: 100vh; 
+  overflow: hidden; 
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
+.TopBar {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 20px;
   background-color: #282c34;
-  min-height: 100vh;
+  color: white;
+  font-size: 16px;
+  height: 50px; 
+}
+
+
+.Content {
+  display: flex;
+  flex: 1; 
+  width: 100%;
+  overflow: hidden; 
+}
+
+
+.Sidebar {
+  flex: 1;
+  background-color: #f0f0f0;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: start;
+}
+
+
+
+.SquareButton {
+  width: 100%;  
+  padding: 20px;
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #333;
+  background-color: #ddd;
+  border: none;
+  cursor: pointer; 
+  display: flex;
+  align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  overflow: hidden; 
+}
+
+
+.SquareButton.active {
+  background-color: #4CAF50; 
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+
+.SquareButton svg {
+  margin-right: 10px; 
+  width: 24px;
+  height: 24px; 
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+
+.MainContent {
+  flex: 10;  
+  padding: 20px;
+  background-color: #fff;
+  color: #333;
+  text-align: left; 
+  
+}
+
+
+.TopControlBar, .StepControlBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  background-color: #ececec;
+  margin-bottom: 10px;
+}
+
+.StartButton {
+  font-weight: bold;
+  padding: 10px 20px;
+}
+
+input[type="text"] {
+  flex-grow: 1;
+  margin: 0 10px;
+  padding: 10px;
+}
+
+.StepControlBar span {
+  flex: 1;
+  text-align: center;
+  margin: 0 5px; 
+}
+
+
+@media (max-width: 768px) {
+  .Content {
+    flex-direction: column;
   }
-  to {
-    transform: rotate(360deg);
+
+  .Sidebar {
+    width: 100%;
+    flex: none; 
   }
+
+  .SquareButton {
+    padding: 15px; 
+  }
+
+
+
+  .TopControlBar, .StepControlBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+.StepDetail.completed {
+  color: red; 
+}
+.LeftPanel, .RightPanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.LeftPanel {
+  width: 25%;
+  background-color: #f4f4f4;
+  padding: 10px;
+  
+}
+
+.RightPanel {
+  width: 75%;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);  
+  grid-template-rows: repeat(10, 1fr);  
+  gap: 2px;
+  height: 70%;  
+ 
+}
+
+.MainContent2 {
+  display: flex; 
+  flex: 10;  
+  
+  background-color: #fff;
+  color: #333;
+  
+  height: 100%;
+}
+.GridCell {
+  background-color: #ddd;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  height: 100%;  
+}
+
+.GridCell.activeCell {
+  background-color: #4CAF50; 
+}
+
+
+@media (max-width: 768px) {
+  .Content {
+    flex-direction: column;
+  }
+
+  .Sidebar, .MainContent2 {
+    width: 100%; 
+  }
+
+  .SquareButton {
+    padding: 15px;
+  }
+
+  .MainContent2 {
+    flex-direction: column; 
+  }
+}
+
+.StepDetail.completed {
+  color: red;
+}
+
+.GridCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.GridCell.NAN {
+  background-color: darkgray;
+}
+
+.GridCell.UNUSED {
+  background-color: lightgray;
+}
+
+.GridCell.CONTAINER {
+  background-color: skyblue;
+  color: black; 
 }
