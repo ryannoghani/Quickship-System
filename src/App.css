@@ -3,10 +3,9 @@
   font-family: Arial, sans-serif;
   display: flex;
   flex-direction: column;
-  height: 100vh; 
-  overflow: hidden; 
+  height: 100vh;
+  overflow: hidden;
 }
-
 
 .TopBar {
   display: flex;
@@ -15,17 +14,15 @@
   background-color: #282c34;
   color: white;
   font-size: 16px;
-  height: 50px; 
+  height: 50px;
 }
-
 
 .Content {
   display: flex;
-  flex: 1; 
+  flex: 1;
   width: 100%;
-  overflow: hidden; 
+  overflow: hidden;
 }
-
 
 .Sidebar {
   flex: 1;
@@ -37,48 +34,42 @@
   justify-content: start;
 }
 
-
-
 .SquareButton {
-  width: 100%;  
+  width: 100%;
   padding: 20px;
   margin-bottom: 10px;
   font-size: 16px;
   color: #333;
   background-color: #ddd;
   border: none;
-  cursor: pointer; 
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden; 
+  overflow: hidden;
 }
 
-
 .SquareButton.active {
-  background-color: #4CAF50; 
+  background-color: #4caf50;
   color: white;
 }
 
-
 .SquareButton svg {
-  margin-right: 10px; 
+  margin-right: 10px;
   width: 24px;
-  height: 24px; 
+  height: 24px;
 }
 
-
 .MainContent {
-  flex: 10;  
+  flex: 10;
   padding: 20px;
   background-color: #fff;
   color: #333;
-  text-align: left; 
-  
+  text-align: left;
 }
 
-
-.TopControlBar, .StepControlBar {
+.TopControlBar,
+.StepControlBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -101,9 +92,8 @@ input[type="text"] {
 .StepControlBar span {
   flex: 1;
   text-align: center;
-  margin: 0 5px; 
+  margin: 0 5px;
 }
-
 
 @media (max-width: 768px) {
   .Content {
@@ -112,24 +102,24 @@ input[type="text"] {
 
   .Sidebar {
     width: 100%;
-    flex: none; 
+    flex: none;
   }
 
   .SquareButton {
-    padding: 15px; 
+    padding: 15px;
   }
 
-
-
-  .TopControlBar, .StepControlBar {
+  .TopControlBar,
+  .StepControlBar {
     flex-direction: column;
     align-items: stretch;
   }
 }
 .StepDetail.completed {
-  color: red; 
+  color: red;
 }
-.LeftPanel, .RightPanel {
+.LeftPanel,
+.RightPanel {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -139,47 +129,45 @@ input[type="text"] {
   width: 25%;
   background-color: #f4f4f4;
   padding: 10px;
-  
 }
 
 .RightPanel {
   width: 75%;
   display: grid;
-  grid-template-columns: repeat(12, 1fr);  
-  grid-template-rows: repeat(10, 1fr);  
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(10, 1fr);
   gap: 2px;
-  height: 70%;  
- 
+  height: 70%;
 }
 
 .MainContent2 {
-  display: flex; 
-  flex: 10;  
-  
+  display: flex;
+  flex: 10;
+
   background-color: #fff;
   color: #333;
-  
+
   height: 100%;
 }
 .GridCell {
   background-color: #ddd;
   border: 1px solid #ccc;
   cursor: pointer;
-  height: 100%;  
+  height: 100%;
 }
 
 .GridCell.activeCell {
-  background-color: #4CAF50; 
+  background-color: #4caf50;
 }
-
 
 @media (max-width: 768px) {
   .Content {
     flex-direction: column;
   }
 
-  .Sidebar, .MainContent2 {
-    width: 100%; 
+  .Sidebar,
+  .MainContent2 {
+    width: 100%;
   }
 
   .SquareButton {
@@ -187,7 +175,7 @@ input[type="text"] {
   }
 
   .MainContent2 {
-    flex-direction: column; 
+    flex-direction: column;
   }
 }
 
@@ -213,5 +201,5 @@ input[type="text"] {
 
 .GridCell.CONTAINER {
   background-color: skyblue;
-  color: black; 
+  color: black;
 }
