@@ -4,10 +4,11 @@ import { MdBalance } from "react-icons/md";
 import { PiCraneTowerLight } from "react-icons/pi";
 import { TbFileDownload } from "react-icons/tb";
 import { GiSave } from "react-icons/gi";
+import ManifestView from "./features/ManifestView";
 
 function App() {
   const fileInputRef = useRef(null);
-  const [gridData, setGridData] = useState(
+  const [grid, setGrid] = useState(
     Array(10).fill(Array(12).fill({ type: "UNUSED", content: "" }))
   );
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -21,7 +22,6 @@ function App() {
   ]); // Example steps
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState(new Set()); // Tracks completed steps
-  const [selectedCell, setSelectedCell] = useState(null); // State to track the clicked cell
 
   const triggerFileInput = () => {
     if (fileInputRef.current) {
@@ -34,11 +34,6 @@ function App() {
     // This will log the ref to see if it is correctly assigned
     console.log(fileInputRef.current);
   }, []);
-  const gridRows = 10;
-  const gridColumns = 12;
-  const grid = Array.from({ length: gridRows }, () =>
-    Array.from({ length: gridColumns }, () => 0)
-  );
 
   const handleLoadManifest = (event) => {
     const fileReader = new FileReader();
@@ -46,7 +41,9 @@ function App() {
     fileReader.onload = (e) => {
       console.log("File Read Complete:", e.target.result); // Log raw file content
       const lines = e.target.result.split("\n");
-      const newGridData = gridData.map((row) => [...row]); // Deep copy of the current grid data
+      const newGridData = Array.from({ length: 10 }, () =>
+        Array.from({ length: 12 }, () => 0)
+      );
 
       lines.forEach((line, index) => {
         const parts = line.replace(/\[|\]|"/g, "").split(",");
@@ -57,8 +54,7 @@ function App() {
           return; // Skip this iteration if not enough parts
         }
 
-        const [cell, weight, description] = parts;
-        const [row, col] = cell.split(",").map(Number);
+        const [row, col, weight, description] = parts;
         if (!description) {
           console.error(`Description missing in line ${index}:`, line);
           return; // Skip if description is missing
@@ -66,26 +62,32 @@ function App() {
 
         const trimmedDescription = description.trim();
         if (trimmedDescription === "NAN") {
-          newGridData[row - 1][col - 1] = { type: "NAN", content: "" };
+          newGridData[row - 1][col - 1] = {
+            type: "NAN",
+            content: "",
+            name: "NaN", // No name for NAN cells
+          };
         } else if (trimmedDescription === "UNUSED") {
-          newGridData[row - 1][col - 1] = { type: "UNUSED", content: "" };
+          newGridData[row - 1][col - 1] = {
+            type: "UNUSED",
+            content: "",
+            name: "", // No name for UNUSED cells
+          };
         } else {
           newGridData[row - 1][col - 1] = {
             type: "CONTAINER",
-            content: trimmedDescription.substring(0, 6),
-          }; // Limit to 6 letters
+            content: trimmedDescription.substring(0, 6), // Limit to 6 characters for display
+            name: trimmedDescription, // Save the full name of the container
+          };
         }
       });
 
-      console.log("Updated Grid Data:", newGridData); // Log the new grid data structure
-      setGridData(newGridData); // Update the state
+      const reverse = newGridData.reverse();
+      console.log("Updated Grid Data:", reverse); // Log the new grid data structure
+      setGrid(reverse); // Update the state
     };
   };
 
-  const handleCellClick = (row, col) => {
-    setSelectedCell({ row, col });
-    console.log(`Cell clicked: Row ${row}, Column ${col}`);
-  };
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentDateTime(new Date());
@@ -185,7 +187,6 @@ function App() {
             <button onClick={handleLogin}>Log In</button>
           </div>
           <div className="StepControlBar">
-            <button onClick={handlePrevStep}>Back</button>
             <span
               className={`StepDetail ${
                 completedSteps.has(currentStep) ? "completed" : ""
@@ -194,37 +195,10 @@ function App() {
               From: {steps[currentStep]}
             </span>
             <button onClick={markStepDone}>Done</button>
+            <button onClick={handlePrevStep}>Back</button>
             <button onClick={handleNextStep}>Next</button>
           </div>
-          <div className="MainContent2">
-            <div className="LeftPanel">
-              <p>Additional controls and information will go here.</p>
-            </div>
-            <div className="RightPanel">
-              {gridData.map((row, rowIndex) =>
-                row.map((cell, colIndex) => (
-                  <div
-                    key={`${rowIndex}-${colIndex}`}
-                    className={`GridCell ${cell.type}`}
-                    style={{
-                      backgroundColor:
-                        cell.type === "NAN"
-                          ? "darkgray"
-                          : cell.type === "UNUSED"
-                          ? "lightgray"
-                          : cell.type === "CONTAINER"
-                          ? "skyblue"
-                          : "transparent",
-                      color: cell.type === "CONTAINER" ? "black" : "dimgray",
-                    }}
-                    onClick={() => handleCellClick(rowIndex, colIndex)}
-                  >
-                    {cell.content} {/* Displaying the name or content */}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          <ManifestView grid={grid} />
         </div>
       </div>
     </div>
