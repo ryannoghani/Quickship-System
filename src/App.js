@@ -4,7 +4,7 @@ import { MdBalance } from "react-icons/md";
 import { PiCraneTowerLight } from "react-icons/pi";
 import { TbFileDownload } from "react-icons/tb";
 import { GiSave } from "react-icons/gi";
-import ManifestView from "./features/ManifestView";
+import ManifestView from "./components/ManifestView.js";
 
 function App() {
   const fileInputRef = useRef(null);
