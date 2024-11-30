@@ -1,6 +1,7 @@
 const BalanceShipState = require("./BalanceShipState");
 
 // https://www.geeksforgeeks.org/implementation-priority-queue-javascript/
+// Priority Queue implementation for the A* search frontier
 class PriorityQueue {
     constructor() {
         this.heap = [];
@@ -87,7 +88,7 @@ class PriorityQueue {
 
 class BalanceOperation {
     constructor(grid) {
-        this.startState = new BalanceShipState(grid, 1, 1, null, 0, this.Heuristic(grid), "");
+        this.startState = new BalanceShipState(grid, 0, 1, null, 0, this.Heuristic(grid), "");
         this.frontier = new PriorityQueue();
         this.visitedStates = new Set();
         this.operationList = [];
@@ -106,13 +107,85 @@ class BalanceOperation {
         }
         return sum / 2;
     }
-    CalculateCost(x1, y1, x2, y2) {
-        return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+    // Calculate total cost of an operation
+    CalculateCost(craneX, craneY, boxStartCol, boxEndCol, topContainers) {
+        return this.CostCranetoBox(craneX, craneY, boxStartCol, topContainers) + this.CostBoxtoBox(boxStartCol, boxEndCol, topContainers);
     }
+    // Calculates cost to move container to a specific location
+    CostBoxtoBox(boxStartCol, boxEndCol, topContainers) {
+        if(boxStartCol === boxEndCol) {
+            return 0;
+        }
+        if(topContainers[boxStartCol] > 9) {
+            return 9999;
+        }
+        let startIsLeft = true;
+        if(boxStartCol > boxEndCol) {
+            startIsLeft = false;
+        }
+        let startHeight = 9 - topContainers[boxStartCol];
+        let endHeight = 9 - topContainers[boxEndCol];
+        let movementUp = -1;
+        if(startIsLeft) {
+            for(let i = boxStartCol + 1; i <= (boxEndCol - 1); i++) {
+                movementUp = Math.max(movementUp, (9 - topContainers[i]) - startHeight);
+            }
+        }
+        else {
+            for(let i = boxStartCol - 1; i >= (boxEndCol + 1); i--) {
+                movementUp = Math.max(movementUp, (9 - topContainers[i]) - startHeight);
+            }
+        }
+        movementUp += 1;
+        let cost = 0; 
+        cost += movementUp;
+        cost += Math.abs(boxEndCol - boxStartCol);
+        cost += Math.abs((endHeight + 1) - (startHeight + movementUp));
+        return cost;
+    }
+    // Calculates cost to move crane to container
+    CostCranetoBox(craneX, craneY, boxCol, topContainers) {
+        if(craneX === boxCol && craneY === topContainers[boxCol]) {
+            return 0;
+        }
+        if(topContainers[boxCol] > 9 || craneY > topContainers[craneX]) {
+            return 9999;
+        }
+        let cost = 0;
+        if(craneY === topContainers[craneX]) {
+            cost++;
+            craneY--;
+        }
+        let craneIsLeft = true;
+        if(craneX > boxCol) {
+            craneIsLeft = false;
+        }
+        let craneHeight = 9 - craneY;
+        let boxHeight = 9 - topContainers[boxCol];
+        let movementUp = -1;
+        if(craneIsLeft) {
+            for(let i = craneX + 1; i <= (boxCol - 1); i++) {
+                movementUp = Math.max(movementUp, (9 - topContainers[i]) - craneHeight);
+            }
+        }
+        else {
+            for(let i = craneX - 1; i >= (boxCol + 1); i--) {
+                movementUp = Math.max(movementUp, (9 - topContainers[i]) - craneHeight);
+            }
+        }
+        movementUp++;
+        cost += movementUp;
+        cost += Math.abs(craneX - boxCol);
+        cost += Math.abs((boxHeight + 1) - (craneHeight + movementUp));
+        cost++;
+        return cost;
+    }
+    // Heuristic function to guess the cost from a goal state
     Heuristic(grid) {
         return 0;
     }
-    CreateOperationList(goalState) {
+    // Creates an array for the list of operations and the list of grids
+    CreateLists(goalState) {
         let currState = goalState;
         while(currState.parent != null) {
             this.operationList.unshift(currState.operation);
@@ -120,6 +193,7 @@ class BalanceOperation {
             currState = currState.parent;
         }
     }
+    // Checks if the given state is a goal state
     CheckGoalState(state) {
         let balanced = state.leftHalfWeight <= this.upperBound && state.leftHalfWeight >= this.lowerBound;
         let validSlots = true;
@@ -132,13 +206,13 @@ class BalanceOperation {
         }
         return balanced && validSlots;
     }
+    // Operation function that expands the given state
     ExpandState(state) {
         for(let i = 0; i < state.width; i++) {
             let originalY = state.topContainer[i];
-            if(i != state.craneX && originalY < 10 && state.grid[originalY][i].name != "NAN") {
+            if(!(i == state.craneX && originalY == state.craneY) && originalY < 10 && state.grid[originalY][i].name != "NAN") {
                 for(let j = 0; j < state.width; j++) {
                     let finalY = state.topContainer[j] - 1;
-                    console.log(state.grid[originalY][i]);
                     if(j != i && finalY >= 0) {
                         console.log("(" + i + ", " + originalY + ") to (" + j + ", " + finalY + ")");
                         let newGrid = [];
@@ -158,18 +232,16 @@ class BalanceOperation {
                             }
                         }
                         if(!this.visitedStates.has(key)) {
-                            let newState = new BalanceShipState(newGrid, j, finalY, state, state.gCost + this.CalculateCost(i, originalY, j, finalY), this.Heuristic(newGrid), "Move container at (" + i + ", " + originalY + ") to (" + j + ", " + finalY + ").")
+                            let newState = new BalanceShipState(newGrid, j, finalY, state, state.gCost + this.CalculateCost(state.craneX, state.craneY, i, j, state.topContainer), this.Heuristic(newGrid), "Move container at (" + i + ", " + originalY + ") to (" + j + ", " + finalY + ").")
                             this.frontier.add(newState);
                             this.visitedStates.add(key);
-                        }
-                        else {
-                            console.log("Visited");
                         }
                     }
                 }
             }
         }
     }
+    // A* search with frontier and map for visited states
     BalanceOperationSearch() {
         this.frontier.add(this.startState);
         this.visitedStates.add(this.startState.grid);
@@ -177,9 +249,8 @@ class BalanceOperation {
             let currState = this.frontier.remove();
 
             if(this.CheckGoalState(currState)) {
-                this.CreateOperationList(currState);
+                this.CreateLists(currState);
                 this.goalState = currState;
-                console.log(this.goalState.grid);
                 break;
             }
 
