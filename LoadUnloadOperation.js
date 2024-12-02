@@ -1,4 +1,4 @@
-const BalanceShipState = require("./BalanceShipState");
+const LoadUnloadShipState = require("./LoadUnloadShipState");
 
 // https://www.geeksforgeeks.org/implementation-priority-queue-javascript/
 // Priority Queue implementation for the A* search frontier
@@ -86,27 +86,16 @@ class PriorityQueue {
     }
 }
 
-class BalanceOperation {
-    constructor(grid) {
-        this.startState = new BalanceShipState(grid, 0, 1, null, 0, this.BalanceHeuristic(grid), "");
+class LoadUnloadOperation {
+    constructor(grid, _loadList, _unloadList) {
+        this.startState = new LoadUnloadShipState(grid, 0, 1, null, 0, this.LoadUnloadHeuristic(grid), "");
         this.frontier = new PriorityQueue();
         this.visitedStates = new Set();
+        this.loadList = _loadList;
+        this.unloadList = _unloadList;
         this.operationList = [];
         this.gridList = [];
-        let average = this.CalculateAverage();
-        this.lowerBound = average * 0.9;
-        this.upperBound = average * 1.1;
         this.goalState;
-    }
-    // Calculate the average of the total weight
-    CalculateAverage() {
-        let sum = 0.0;
-        for(let i = 0; i < this.startState.height; i++) {
-            for(let j = 0; j < this.startState.width; j++) {
-                sum += this.startState.grid[i][j].weight;
-            }
-        }
-        return sum / 2;
     }
     // Calculate total cost of an operation
     CalculateCost(craneX, craneY, boxStartCol, boxEndCol, topContainers) {
@@ -181,12 +170,8 @@ class BalanceOperation {
         cost++;
         return cost;
     }
-    // Balance heuristic function to guess the cost from a goal state
-    BalanceHeuristic(grid) {
-        return 0;
-    }
-    // SIFT heuristic function to guess the cost from a goal state
-    SIFTHeuristic(grid) {
+    // Load/unload heuristic function to guess the cost from a goal state
+    LoadUnloadHeuristic(grid) {
         return 0;
     }
     // Creates an array for the list of operations and the list of grids
@@ -198,8 +183,8 @@ class BalanceOperation {
             currState = currState.parent;
         }
     }
-    // Checks if the given state is a balance goal state
-    CheckBalanceGoalState(state) {
+    // Checks if the given state is a load/unload goal state
+    CheckLoadUnloadGoalState(state) {
         let balanced = state.leftHalfWeight <= this.upperBound && state.leftHalfWeight >= this.lowerBound;
         let validSlots = true;
         for(let i = 0; i < 2 && validSlots; i++) {
@@ -211,49 +196,8 @@ class BalanceOperation {
         }
         return balanced && validSlots;
     }
-    // Checks if the given state is a SIFT goal state
-    CheckSIFTGoalState(state) {
-        if(this.sortedContainers.length == 0) {
-            return true;
-        }
-        let row_index = 9;
-        let left_column_index = 5;
-        let right_column_index = 6;
-        let i = 0;
-        while(true) {
-            if(left_column_index < 0 || right_column_index > 11 || (state.grid[row_index][left_column_index].name == "NAN" && state.grid[row_index][right_column_index].name == "NAN")) {
-                left_column_index = 5;
-                right_column_index = 6;
-                row_index -= 1;
-            }
-            else {
-                if(state.grid[row_index][left_column_index].name == this.sortedContainers[i].name && state.grid[row_index][left_column_index].weight == this.sortedContainers[i].weight) {
-                    left_column_index--;
-                    ++i;
-                    if(i == this.sortedContainers.length) {
-                        return true;
-                    }
-                    else {
-                        if(state.grid[row_index][right_column_index].name == this.sortedContainers[i].name && state.grid[row_index][right_column_index].weight == this.sortedContainers[i].weight) {
-                            right_column_index++;
-                            ++i;
-                            if(i == this.sortedContainers.length) {
-                                return true;
-                            }
-                        }
-                        else {
-                            return false;
-                        }
-                    } 
-                }
-                else {
-                    return false;
-                }
-            }
-        }
-    }
-    // Operation function that expands the given balance state
-    ExpandBalanceState(state) {
+    // Operation function that expands the given load/unload state
+    ExpandLoadUnloadState(state) {
         for(let i = 0; i < state.width; i++) {
             let originalY = state.topContainer[i];
             if(!(i == state.craneX && originalY == state.craneY) && originalY < 10 && state.grid[originalY][i].name != "NAN") {
@@ -278,7 +222,7 @@ class BalanceOperation {
                             }
                         }
                         if(!this.visitedStates.has(key)) {
-                            let newState = new BalanceShipState(newGrid, j, finalY, state, state.gCost + this.CalculateCost(state.craneX, state.craneY, i, j, state.topContainer), this.BalanceHeuristic(newGrid), "Move container at (" + i + ", " + originalY + ") to (" + j + ", " + finalY + ").")
+                            let newState = new LoadUnloadShipState(newGrid, j, finalY, state, state.gCost + this.CalculateCost(state.craneX, state.craneY, i, j, state.topContainer), this.LoadUnloadHeuristic(newGrid), "Move container at (" + i + ", " + originalY + ") to (" + j + ", " + finalY + ").")
                             this.frontier.add(newState);
                             this.visitedStates.add(key);
                         }
@@ -287,76 +231,20 @@ class BalanceOperation {
             }
         }
     }
-    // Operation function that expands the given SIFT state
-    ExpandSIFTState(state) {
-        for(let i = 0; i < state.width; i++) {
-            let originalY = state.topContainer[i];
-            if(!(i == state.craneX && originalY == state.craneY) && originalY < 10 && state.grid[originalY][i].name != "NAN") {
-                for(let j = 0; j < state.width; j++) {
-                    let finalY = state.topContainer[j] - 1;
-                    if(j != i && finalY >= 0) {
-                        console.log("(" + i + ", " + originalY + ") to (" + j + ", " + finalY + ")");
-                        let newGrid = [];
-                        for(let k = 0; k < state.height; k++) {
-                            newGrid[k] = [];
-                            for(let l = 0; l < state.width; l++) {
-                                newGrid[k][l] = state.grid[k][l];
-                            }
-                        }
-                        let temp = newGrid[finalY][j];
-                        newGrid[finalY][j] = newGrid[originalY][i];
-                        newGrid[originalY][i] = temp;
-                        let key = "";
-                        for(let k = 0; k < newGrid.length; k++) {
-                            for(let l = 0; l < newGrid[k].length; l++) {
-                                key += newGrid[k][l].name;
-                            }
-                        }
-                        if(!this.visitedStates.has(key)) {
-                            let newState = new BalanceShipState(newGrid, j, finalY, state, state.gCost + this.CalculateCost(state.craneX, state.craneY, i, j, state.topContainer), this.SIFTHeuristic(newGrid), "Move container at (" + i + ", " + originalY + ") to (" + j + ", " + finalY + ").")
-                            this.frontier.add(newState);
-                            this.visitedStates.add(key);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    // Balance A* search with frontier and map for visited states
-    BalanceOperationSearch() {
-        if(this.startState.BalanceHeuristic == -1) {
-            this.SIFTOperationSearch();
-        }
-        else {
-            this.frontier.add(this.startState);
-            this.visitedStates.add(this.startState.grid);
-            while(this.frontier.heap.length > 0) {
-                let currState = this.frontier.remove();
-                if(this.CheckBalanceGoalState(currState)) {
-                    this.CreateLists(currState);
-                    this.goalState = currState;
-                    break;
-                }
-                this.ExpandBalanceState(currState);
-            }
-        }
-    }
-    // SIFT A* search for frontier and map for visited states
-    // Currently has no heuristic so appears to take too long to test
-    SIFTOperationSearch() {
-        this.sortedContainers = this.startState.grid.flat().filter(container => container.name !== "NAN" && container.name !== "UNUSED").sort((a, b) => b.weight - a.weight);
+    // Load/unload A* search with frontier and map for visited states
+    LoadUnloadOperationSearch() {
         this.frontier.add(this.startState);
         this.visitedStates.add(this.startState.grid);
         while(this.frontier.heap.length > 0) {
             let currState = this.frontier.remove();
-            if(this.CheckSIFTGoalState(currState)) {
+            if(this.CheckLoadUnloadGoalState(currState)) {
                 this.CreateLists(currState);
                 this.goalState = currState;
                 break;
             }
-            this.ExpandSIFTState(currState);
+            this.ExpandLoadUnloadState(currState);
         }
     }
 }
 
-module.exports = BalanceOperation;
+module.exports = LoadUnloadOperation;
