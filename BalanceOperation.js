@@ -1,4 +1,5 @@
 const BalanceShipState = require("./BalanceShipState");
+const CalculateTransferCost = require("./HelperFunctions/CalculateTransferCost")
 
 // https://www.geeksforgeeks.org/implementation-priority-queue-javascript/
 // Priority Queue implementation for the A* search frontier
@@ -187,7 +188,55 @@ class BalanceOperation {
     }
     // SIFT heuristic function to guess the cost from a goal state
     SIFTHeuristic(grid) {
-        return 0;
+        var containersSortedByWeight = []
+
+        for (let i = 9; i >= 0; --i) {
+            for (let j = 0; j < 12; ++j) {
+                if (grid[i][j].name != "NAN" && grid[i][j].name != 'UNUSED') {
+                    containersSortedByWeight.push(grid[i][j])
+                }
+            }
+        }
+
+        containersSortedByWeight.sort((a, b) => b.weight - a.weight);
+        var where_each_container_needs_to_go = new Map()    //Maps container to a row and column
+        var row = 9
+        var left_column  = 5
+        var right_column  = 6
+    
+        for (let i = 0; i < containersSortedByWeight.length;) {//First we'll find where each container needs to go
+            if (grid[row][left_column] == "NAN" || grid[row][right_column] == "NAN" || left_column < 0 || right_column >= 12) {
+                row++
+                left_column = 5
+                right_column = 6
+            }
+            else {
+                where_each_container_needs_to_go.set(containersSortedByWeight[i], [row, left_column])
+                ++i
+                
+                if (i == containersSortedByWeight.length) {
+                    break
+                }
+                else {
+                    where_each_container_needs_to_go.set(containersSortedByWeight[i], [row, right_column])
+                    ++i
+                }
+    
+                left_column--
+                right_column++
+            }
+        }
+    
+        var cost = 0
+        //Now we calculate how far each container is currently from where it's supposed to go after sift
+        for (let i = 9; i >= 0; --i) {
+            for (let j = 0; j < 12; ++j) {
+                if (grid[i][j].name != "NAN" && grid[i][j].name != 'UNUSED') {
+                    cost += CalculateTransferCost(["SHIP", i,j], ["SHIP", where_each_container_needs_to_go.get(grid[i][j])[0], where_each_container_needs_to_go.get(grid[i][j])[1]])   
+                }
+            }
+        }
+        return cost
     }
     // Creates an array for the list of operations and the list of grids
     CreateLists(goalState) {
@@ -210,47 +259,6 @@ class BalanceOperation {
             }
         }
         return balanced && validSlots;
-    }
-    // Checks if the given state is a SIFT goal state
-    CheckSIFTGoalState(state) {
-        if(this.sortedContainers.length == 0) {
-            return true;
-        }
-        let row_index = 9;
-        let left_column_index = 5;
-        let right_column_index = 6;
-        let i = 0;
-        while(true) {
-            if(left_column_index < 0 || right_column_index > 11 || (state.grid[row_index][left_column_index].name == "NAN" && state.grid[row_index][right_column_index].name == "NAN")) {
-                left_column_index = 5;
-                right_column_index = 6;
-                row_index -= 1;
-            }
-            else {
-                if(state.grid[row_index][left_column_index].name == this.sortedContainers[i].name && state.grid[row_index][left_column_index].weight == this.sortedContainers[i].weight) {
-                    left_column_index--;
-                    ++i;
-                    if(i == this.sortedContainers.length) {
-                        return true;
-                    }
-                    else {
-                        if(state.grid[row_index][right_column_index].name == this.sortedContainers[i].name && state.grid[row_index][right_column_index].weight == this.sortedContainers[i].weight) {
-                            right_column_index++;
-                            ++i;
-                            if(i == this.sortedContainers.length) {
-                                return true;
-                            }
-                        }
-                        else {
-                            return false;
-                        }
-                    } 
-                }
-                else {
-                    return false;
-                }
-            }
-        }
     }
     // Operation function that expands the given balance state
     ExpandBalanceState(state) {
@@ -347,7 +355,7 @@ class BalanceOperation {
         this.visitedStates.add(this.startState.grid);
         while(this.frontier.heap.length > 0) {
             let currState = this.frontier.remove();
-            if(this.CheckSIFTGoalState(currState)) {
+            if(this.SIFTHeuristic(currState.grid) == 0) {
                 this.CreateLists(currState);
                 this.goalState = currState;
                 break;
