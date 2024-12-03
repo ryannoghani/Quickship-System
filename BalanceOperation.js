@@ -260,7 +260,6 @@ class BalanceOperation {
                 for(let j = 0; j < state.width; j++) {
                     let finalY = state.topContainer[j] - 1;
                     if(j != i && finalY >= 0) {
-                        console.log("(" + i + ", " + originalY + ") to (" + j + ", " + finalY + ")");
                         let newGrid = [];
                         for(let k = 0; k < state.height; k++) {
                             newGrid[k] = [];
@@ -295,7 +294,6 @@ class BalanceOperation {
                 for(let j = 0; j < state.width; j++) {
                     let finalY = state.topContainer[j] - 1;
                     if(j != i && finalY >= 0) {
-                        console.log("(" + i + ", " + originalY + ") to (" + j + ", " + finalY + ")");
                         let newGrid = [];
                         for(let k = 0; k < state.height; k++) {
                             newGrid[k] = [];
