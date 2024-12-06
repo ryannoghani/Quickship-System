@@ -186,59 +186,87 @@ class BalanceOperation {
     BalanceHeuristic(grid) {
         return 0;
     }
-    // SIFT heuristic function to guess the cost from a goal state
-    SIFTHeuristic(grid) {
-        var containersSortedByWeight = []
 
-        for (let i = 9; i >= 0; --i) {
+
+    // SIFT heuristic function to guess the cost from a goal state
+
+    SIFTHeuristic(grid) {
+        let containers = []
+        let where_each_container_is = new Map() //Maps container to its current row and column. This is so we don't have to constantly search for them in the grid
+
+        for (let i = 9; i >= 0; --i) {  //Loop adds containers to containers array and maps each container to its current location
             for (let j = 0; j < 12; ++j) {
                 if (grid[i][j].name != "NAN" && grid[i][j].name != 'UNUSED') {
-                    containersSortedByWeight.push(grid[i][j])
+                    containers.push(grid[i][j])
+                    where_each_container_is.set(grid[i][j], [i, j])
                 }
             }
         }
+        containers.sort((a, b) => b.weight - a.weight); //Biggest to smallest weight
 
-        containersSortedByWeight.sort((a, b) => b.weight - a.weight);
-        var where_each_container_needs_to_go = new Map()    //Maps container to a row and column
-        var row = 9
-        var left_column  = 5
-        var right_column  = 6
-    
-        for (let i = 0; i < containersSortedByWeight.length;) {//First we'll find where each container needs to go
-            if (grid[row][left_column] == "NAN" || grid[row][right_column] == "NAN" || left_column < 0 || right_column >= 12) {
-                row++
+        let duplicates_list = []    //Groups together containers with the same weight
+        let j
+        for (let i = 0; i < containers.length; i = j) { //Add all containers to duplicates_list, grouping containers weight with the same weight together
+            j = i+1
+            for (; j < containers.length && containers[i].weight == containers[j].weight; ++j) {}
+            duplicates_list.push(containers.slice(i,j))
+        }
+
+        let row = 9
+        let left_column = 5
+        let right_column = 6
+        let sift_placements = []    //Stores all the locations containers are allowed to be at for SIFT to be satisfied
+
+        for (let i = 0; i < containers.length; ++i) {   //Add all locations to sift_placements
+            if (left_column < 0 || right_column >= 12 || grid[row][left_column].name == "NAN" || grid[row][left_column].name == "NAN") {
+                row--
                 left_column = 5
                 right_column = 6
-            }
-            else {
-                where_each_container_needs_to_go.set(containersSortedByWeight[i], [row, left_column])
-                ++i
-                
-                if (i == containersSortedByWeight.length) {
-                    break
-                }
-                else {
-                    where_each_container_needs_to_go.set(containersSortedByWeight[i], [row, right_column])
-                    ++i
-                }
-    
-                left_column--
+            }  
+            sift_placements.push([row, left_column])
+            left_column--
+            i++ 
+            if (i < containers.length) {
+                sift_placements.push([row, right_column])
                 right_column++
-            }
+            } 
         }
-    
-        var cost = 0
-        //Now we calculate how far each container is currently from where it's supposed to go after sift
-        for (let i = 9; i >= 0; --i) {
-            for (let j = 0; j < 12; ++j) {
-                if (grid[i][j].name != "NAN" && grid[i][j].name != 'UNUSED') {
-                    cost += CalculateTransferCost(["SHIP", i,j], ["SHIP", where_each_container_needs_to_go.get(grid[i][j])[0], where_each_container_needs_to_go.get(grid[i][j])[1]])   
+        let sift_duplicates = []    //Groups all locations together where multiple containers can go
+        let cnt = 0
+
+        for (let i of duplicates_list) {    //If there are duplicate weights, group together the possible locations they can be moved
+            sift_duplicates.push(sift_placements.slice(cnt, cnt + i.length))
+            cnt += i.length
+        }
+
+        let total_cost = 0
+        let minimum_cost
+        let current_cost
+        let costs_array = []
+     
+        for (let i = 0; i < duplicates_list.length; ++i) {  //Minimum cost is computed by finding the minimum distance out of all duplicate containers to multiple possible locations times the number of duplicates
+            minimum_cost = Number.MAX_SAFE_INTEGER
+            for (let j of duplicates_list[i]) {
+                costs_array.push([])
+                for (let k of sift_duplicates[i]) {
+                    current_cost = CalculateTransferCost(["SHIP", where_each_container_is.get(j)[0], where_each_container_is.get(j)[1]], ["SHIP", k[0], k[1]])
+                    if (current_cost < minimum_cost) {
+                        minimum_cost = current_cost
+                    }
+                    costs_array[costs_array.length-1].push(current_cost)
                 }
             }
+            total_cost += minimum_cost * duplicates_list[i].length
         }
-        return cost
+        
+        let is_goal_state = true
+        for (let i of costs_array) {
+            if (!i.includes(0)) {
+                is_goal_state = false
+            }
+        }
+        return [total_cost, is_goal_state]
     }
-    // Creates an array for the list of operations and the list of grids
     CreateLists(goalState) {
         let currState = goalState;
         while(currState.parent != null) {
@@ -319,7 +347,7 @@ class BalanceOperation {
                             }
                         }
                         if(!this.visitedStates.has(key)) {
-                            let newState = new BalanceShipState(newGrid, j, finalY, state, state.gCost + this.CalculateCost(state.craneX, state.craneY, i, j, state.topContainer), this.SIFTHeuristic(newGrid), "Move container at (" + i + ", " + originalY + ") to (" + j + ", " + finalY + ").")
+                            let newState = new BalanceShipState(newGrid, j, finalY, state, state.gCost + this.CalculateCost(state.craneX, state.craneY, i, j, state.topContainer), this.SIFTHeuristic(newGrid)[0], "Move container at (" + i + ", " + originalY + ") to (" + j + ", " + finalY + ").")
                             this.frontier.add(newState);
                             this.visitedStates.add(key);
                         }
@@ -355,7 +383,7 @@ class BalanceOperation {
         this.visitedStates.add(this.startState.grid);
         while(this.frontier.heap.length > 0) {
             let currState = this.frontier.remove();
-            if(this.SIFTHeuristic(currState.grid) == 0) {
+            if(this.SIFTHeuristic(currState.grid)[1]) {
                 this.CreateLists(currState);
                 this.goalState = currState;
                 break;
