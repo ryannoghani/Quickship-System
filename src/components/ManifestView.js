@@ -1,7 +1,9 @@
 import { React, useState } from "react";
 import "./ManifestView.css";
 
-export default function ManifestView({ grid }) {
+export default function ManifestView({
+  grid = Array(10).fill(Array(12).fill({ type: "UNUSED", content: "" })),
+}) {
   const [selectedCell, setSelectedCell] = useState(null); // State to track the clicked cell
 
   const handleCellClick = (row, col) => {

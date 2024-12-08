@@ -8,9 +8,7 @@ import ManifestView from "./components/ManifestView.js";
 
 function App() {
   const fileInputRef = useRef(null);
-  const [grid, setGrid] = useState(
-    Array(10).fill(Array(12).fill({ type: "UNUSED", content: "" }))
-  );
+  const [grids, setGrids] = useState(null);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [mode, setMode] = useState("loadUnload"); // Default mode
   const [userName, setUserName] = useState("");
@@ -84,7 +82,7 @@ function App() {
 
       const reverse = newGridData.reverse();
       console.log("Updated Grid Data:", reverse); // Log the new grid data structure
-      setGrid(reverse); // Update the state
+      setGrids([reverse]); // Update the state
     };
   };
 
@@ -115,7 +113,7 @@ function App() {
   };
 
   const handleNextStep = () => {
-    if (currentStep < steps.length - 1) {
+    if (currentStep < grids.length - 1) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -198,7 +196,7 @@ function App() {
             <button onClick={handlePrevStep}>Back</button>
             <button onClick={handleNextStep}>Next</button>
           </div>
-          <ManifestView grid={grid} />
+          <ManifestView grid={grids?.[currentStep]} />
         </div>
       </div>
     </div>
