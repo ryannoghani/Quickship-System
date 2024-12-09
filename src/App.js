@@ -134,7 +134,7 @@ function App() {
     if (mode === "balance") {
       let balanceOp = new BalanceOperation(grids[0]);
       balanceOp.BalanceOperationSearch();
-      setGrids(grids.concat(balanceOp.gridList));
+      setGrids([grids[0]].concat(balanceOp.gridList));
       setSteps(balanceOp.operationList);
     }
     if (mode === "loadUnload") {

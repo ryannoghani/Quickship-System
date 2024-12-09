@@ -32,7 +32,9 @@ export default function ManifestView({
             onClick={() => handleCellClick(rowIndex, colIndex)}
             title={cell.name} // Add a tooltip for container cells
           >
-            {cell.name !== "UNUSED" && cell.name !== "NAN" ? cell.name : ""}
+            {cell.name !== "UNUSED" && cell.name !== "NAN"
+              ? cell.name.substring(0, 3)
+              : ""}
           </div>
         ))
       )}
