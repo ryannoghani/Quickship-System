@@ -1,0 +1,74 @@
+.LeftPanel,
+.ManifestView {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Left panel for additional controls and information */
+.LeftPanel {
+  width: 25%;
+  background-color: #f4f4f4;
+  padding: 10px;
+}
+
+/* Right panel that holds the grid layout */
+.ManifestView {
+  width: 75%;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr); /* 12 equal columns */
+  grid-template-rows: repeat(10, 1fr); /* 10 equal rows */
+  gap: 2px;
+  height: 70%; /* Adjust height of the grid */
+}
+
+/* Styling for each grid cell */
+.GridCell {
+  background-color: #ddd;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Active grid cell, which could be clicked or selected */
+.GridCell.activeCell {
+  background-color: #4caf50; /* Green for active cells */
+}
+
+/* Specific background colors for different cell types */
+.GridCell.NAN {
+  background-color: darkgray;
+}
+
+.GridCell.UNUSED {
+  background-color: lightgray;
+}
+
+.GridCell.CONTAINER {
+  background-color: skyblue;
+  color: black; /* Text color for container cells */
+}
+
+/* Media query for responsiveness (mobile or smaller devices) */
+@media (max-width: 768px) {
+  .Content {
+    flex-direction: column;
+  }
+
+  .Sidebar,
+  .MainContent2 {
+    width: 100%; /* Full width on small screens */
+  }
+
+  /* Ensuring buttons look good on smaller screens */
+  .SquareButton {
+    padding: 15px;
+  }
+
+  .MainContent2 {
+    flex-direction: column;
+  }
+}

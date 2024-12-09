@@ -1,0 +1,14 @@
+.StepControlBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  background-color: #ececec;
+  margin-bottom: 10px;
+}
+
+.StepControlBar span {
+  flex: 1;
+  text-align: center;
+  margin: 0 5px;
+}
