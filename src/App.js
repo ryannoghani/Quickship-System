@@ -7,6 +7,7 @@ import { GiSave } from "react-icons/gi";
 import ManifestView from "./components/ManifestView.js";
 import LogPanel from "./components/LogPanel.js";
 import StepControlBar from "./components/StepControlBar.js";
+import BalanceOperation from "./functions/BalanceOperation.js";
 
 function App() {
   const fileInputRef = useRef(null);
@@ -138,6 +139,17 @@ function App() {
     }
   };
 
+  const handleStart = () => {
+    if (mode === "balance") {
+      let balanceOp = new BalanceOperation(grids[0]);
+      balanceOp.BalanceOperationSearch();
+      setGrids(balanceOp.gridList);
+      setSteps(balanceOp.operationList);
+    }
+    if (mode === "loadUnload") {
+    }
+  };
+
   return (
     <div className="App">
       <div className="TopBar">
@@ -177,7 +189,9 @@ function App() {
         </div>
         <div className="MainContent">
           <div className="TopControlBar">
-            <button className="StartButton">Start</button>
+            <button className="StartButton" onClick={handleStart}>
+              Start
+            </button>
             <input
               type="text"
               placeholder={currentUser || "Enter your name"} // Show current user as placeholder if available
