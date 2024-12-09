@@ -4,7 +4,7 @@ import "./ManifestView.css";
 //This component is purely responsible for displaying a 2d grid that's passed to it
 
 export default function ManifestView({
-  grid = Array(10).fill(Array(12).fill({ type: "UNUSED", content: "" })),
+  grid = Array(10).fill(Array(12).fill({ name: "UNUSED", weight: "0" })),
 }) {
   const [selectedCell, setSelectedCell] = useState(null); // State to track the clicked cell
 
@@ -19,22 +19,20 @@ export default function ManifestView({
         row.map((cell, colIndex) => (
           <div
             key={`${rowIndex}-${colIndex}`}
-            className={`GridCell ${cell.type}`}
+            className={`GridCell ${cell.name}`}
             style={{
               backgroundColor:
-                cell.type === "NAN"
+                cell.name === "NAN"
                   ? "darkgray"
-                  : cell.type === "UNUSED"
+                  : cell.name === "UNUSED"
                   ? "lightgray"
-                  : cell.type === "CONTAINER"
-                  ? "skyblue"
-                  : "transparent",
-              color: cell.type === "CONTAINER" ? "black" : "dimgray",
+                  : "skyblue",
+              color: "black",
             }}
             onClick={() => handleCellClick(rowIndex, colIndex)}
-            title={cell.type === "CONTAINER" ? cell.name : ""} // Add a tooltip for container cells
+            title={cell.name} // Add a tooltip for container cells
           >
-            {cell.content} {/* Displaying the name or content */}
+            {cell.name !== "UNUSED" && cell.name !== "NAN" ? cell.name : ""}
           </div>
         ))
       )}

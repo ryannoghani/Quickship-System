@@ -2,17 +2,29 @@ import React from "react";
 import "./StepControlBar.css";
 
 export default function StepControlBar({
+  isActive,
+  index,
   stepDescription,
   onDone,
   onPrev,
   onNext,
 }) {
+  let msg = "";
+  if (stepDescription !== undefined) {
+    msg = "Step " + (index + 1) + ": " + stepDescription;
+  }
   return (
     <div className="StepControlBar">
-      <span>From: {stepDescription}</span>
-      <button onClick={onDone}>Done</button>
-      <button onClick={onPrev}>Back</button>
-      <button onClick={onNext}>Next</button>
+      <span>{msg}</span>
+      <button onClick={onDone} disabled={!isActive}>
+        Done
+      </button>
+      <button onClick={onPrev} disabled={!isActive}>
+        Back
+      </button>
+      <button onClick={onNext} disabled={!isActive}>
+        Next
+      </button>
     </div>
   );
 }

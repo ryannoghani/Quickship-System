@@ -1,7 +1,8 @@
-import Container from "./Container";
+import Container from "./Container.js";
+//import fs from "fs";
 
 export default class ManifestGridTranslator {
-  ConvertManifestToGrid(manifestFileName) {
+  ConvertManifestToGrid(fileInputString) {
     //Initialize grid of containers
     let grid = [];
     for (let i = 0; i < 10; i++) {
@@ -10,9 +11,7 @@ export default class ManifestGridTranslator {
         grid[i][j] = new Container();
       }
     }
-    //Opening up file to read
-    var fs = require("fs");
-    const manifestString = fs.readFileSync(manifestFileName, "utf8"); //Stores the file into a string
+
     var index = 1;
     var indexOfNewline;
     var weight;
@@ -25,22 +24,22 @@ export default class ManifestGridTranslator {
     ) {
       for (var j = 0; j < 12; ++j) {
         index += 9;
-        weight = parseInt(manifestString.substring(index, index + 6)); //Takes substring, converts to integer
+        weight = parseInt(fileInputString.substring(index, index + 6)); //Takes substring, converts to integer
         grid[i][j].weight = weight;
         index += 8;
         indexOfNewline = index;
         while (
-          manifestString.substring(indexOfNewline, indexOfNewline + 1) !==
+          fileInputString.substring(indexOfNewline, indexOfNewline + 1) !==
             "\n" &&
-          indexOfNewline < manifestString.length
+          indexOfNewline < fileInputString.length
         ) {
           //Finds index of newline character, which indicates when the name has ended
           indexOfNewline++;
         }
-        if (manifestString[indexOfNewline - 1] === "\r") {
-          name = manifestString.substring(index, indexOfNewline - 1);
+        if (fileInputString[indexOfNewline - 1] === "\r") {
+          name = fileInputString.substring(index, indexOfNewline - 1);
         } else {
-          name = manifestString.substring(index, indexOfNewline);
+          name = fileInputString.substring(index, indexOfNewline);
         }
 
         grid[i][j].name = name;
@@ -51,7 +50,6 @@ export default class ManifestGridTranslator {
   }
 
   ConvertGridToManifest(
-    manifestFileName,
     grid //UPDATES MANIFEST BASED ON CONTENTS OF GRID
   ) {
     var line = "";
@@ -85,7 +83,6 @@ export default class ManifestGridTranslator {
         }
       }
     }
-    var fs = require("fs");
-    fs.writeFileSync(manifestFileName, line);
+    return line;
   }
 }

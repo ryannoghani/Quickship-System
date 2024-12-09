@@ -1,4 +1,3 @@
-import Container from "./Container";
 function ManhattanDistance(startingLocation, endingLocation) {
   return (
     Math.abs(startingLocation[1] - endingLocation[1]) +

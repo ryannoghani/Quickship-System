@@ -1,5 +1,5 @@
-import BalanceShipState from "./BalanceShipState";
-import CalculateTransferCost from "./CalculateTransferCost";
+import BalanceShipState from "./BalanceShipState.js";
+import CalculateTransferCost from "./CalculateTransferCost.js";
 
 // https://www.geeksforgeeks.org/implementation-priority-queue-javascript/
 // Priority Queue implementation for the A* search frontier
@@ -370,14 +370,14 @@ export default class BalanceOperation {
                   ),
                 this.BalanceHeuristic(newGrid),
                 "Move container at (" +
-                  i +
+                  (10 - originalY) +
                   ", " +
-                  originalY +
+                  (i + 1) +
                   ") to (" +
-                  j +
+                  (10 - finalY) +
                   ", " +
-                  finalY +
-                  ")."
+                  (j + 1) +
+                  ")"
               );
               this.frontier.add(newState);
               this.visitedStates.add(key);
@@ -431,14 +431,14 @@ export default class BalanceOperation {
                   ),
                 this.SIFTHeuristic(newGrid)[0],
                 "Move container at (" +
-                  i +
+                  (10 - originalY) +
                   ", " +
-                  originalY +
+                  (i + 1) +
                   ") to (" +
-                  j +
+                  (10 - finalY) +
                   ", " +
-                  finalY +
-                  ")."
+                  (j + 1) +
+                  ")"
               );
               this.frontier.add(newState);
               this.visitedStates.add(key);
