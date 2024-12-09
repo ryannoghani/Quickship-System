@@ -111,6 +111,7 @@ function numGridCont(grid) {
 
 let containersIn = ["STATER BROS", "AMAZON"];
 let containersOut = ["WALMART", "TARGET", "WALMART", "RALPHS", "RALPHS"];
+//let containersOut = [];
 
 let grid = [
 
@@ -129,9 +130,9 @@ let grid = [
 let cost  = 0;
 
 cost += 7 * (containersIn.length); // cost for containers still to be loaded. 2 from truck to pink left, 4 from pink left to pink right, 1 to get into valid ship slot
-console.log("cost after loading: " + cost);
+console.log("Cost after loading containers: " + cost + "\n");
 cost += 5 * (numGridCont(grid)); // cost for containers still in buffer. 4 from pink left to pink right, 1 into valid ship slot
-console.log("cost after emptyuing buffer: " + cost);
+console.log("Cost after emptying buffer: " + cost + "\n");
 let numContOutMap = new Map(); //maps how many containers of a specific name to take out
 for (let i = 0; i < containersOut.length; i++) {
     if (numContOutMap.has(containersOut[i])) { //if already in map, increment
@@ -142,11 +143,24 @@ for (let i = 0; i < containersOut.length; i++) {
     }
 }
 
-console.log(numContOutMap);
-
 let currContainerName;
 
-// find cost to unload each containers that has a name matching those in containersOut
+for (let i = 0 + 27; i < 12 + 27; i++) {
+    for (let j = 1; j >= 0; j--) {
+        //currContainerName = grid[j][i].name;
+        currContainerName = grid[j][i];
+        if (currContainerName === "UNUSED") {
+            break;
+        }
+        if (currContainerName !== "NAN" && !numContOutMap.has(currContainerName)) {
+            cost += (j === 0) ? 2 : 1; // 2 if on second row above, 1 if on first row above
+        }
+    }
+}
+console.log("Cost after clearing above row 8 on ship: " + cost + "\n");
+
+if (containersOut.length > 0) {
+    // find cost to unload each containers that has a name matching those in containersOut
 let minHeap = new PriorityQueueNameCost();
 for (let i = 0 + 27; i < 12 + 27; i++) { // left to right
     for (let j = 9; j >= 2; j--) { // down to up
@@ -161,41 +175,26 @@ for (let i = 0 + 27; i < 12 + 27; i++) { // left to right
     }
 }
 
-console.log(minHeap);
-
-for (let i = 0 + 27; i < 12 + 27; i++) {
-    for (let j = 1; j >= 0; j--) {
-        //currContainerName = grid[j][i].name;
-        currContainerName = grid[j][i];
-        if (currContainerName === "UNUSED") {
-            break;
-        }
-        if (currContainerName !== "NAN" && !numContOutMap.has(currContainerName)) {
-            cost += (j === 0) ? 2 : 1; // 2 if on second row above, 1 if on first row above
-        }
-    }
-}
-
-console.log("cost after clearing above row 8 on ship: " + cost);
-
 console.log(numContOutMap);
+console.log(minHeap);
 
 let containersRemoved = 0;
 // pick only the most efficient containers to take out, out of all containers with matching names
 while (containersRemoved < containersOut.length) {
     currContainerName = minHeap.peek().name; // name of smallest cost item
     if (numContOutMap.get(currContainerName) > 0) { // is there still containers of that name needed to be taken out
+        console.log("Need " + minHeap.peek().name + ". Adding cost. New total is " + (cost + minHeap.peek().cost));
         cost += minHeap.remove().cost;
         numContOutMap.set(currContainerName, numContOutMap.get(currContainerName) - 1);
         containersRemoved++;
-        console.log("need adding cost. new total is " + cost);
     }
     else {
-        console.log("dont need " + minHeap.peek().name);
+        console.log("Dont need " + minHeap.peek().name + ". Removing from minheap");
         minHeap.remove();
     }
     console.log(numContOutMap);
     console.log(minHeap);
 }
+}
 
-console.log("cost after unloading container: " + cost);
+console.log("cost after unloading containers: " + cost);

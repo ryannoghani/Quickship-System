@@ -126,22 +126,7 @@ function heuristic (containersIn, containersOut, grid) {
 
     let currContainerName;
 
-    // find cost to unload each containers that has a name matching those in containersOut
-    let minHeap = new PriorityQueueNameCost();
-    for (let i = 0 + 27; i < 12 + 27; i++) { // left to right
-        for (let j = 9; j >= 2; j--) { // down to up
-            currContainerName = grid[j][i].name;
-            if (currContainerName === "UNUSED") {
-                break;
-            }
-            if(numContOutMap.has(currContainerName)) { // current container has the name of one to be taken out
-                minHeap.add(new NameCost(currContainerName, Math.abs(1 - j) + Math.abs(27 - i) + 6)); //manhattan distance to right pink square + 6 (4 to left pink sqaure and 2 to truck)
-            }
-        }
-    }
-    
-
-    // find cost of moving all containers above row 8 back into ship
+    // find cost of moving all non unloadable containers above row 8 back into ship
     for (let i = 0 + 27; i < 12 + 27; i++) {
         for (let j = 1; j >= 0; j--) {
             currContainerName = grid[j][i].name;
@@ -154,17 +139,33 @@ function heuristic (containersIn, containersOut, grid) {
         }
     }
 
-    let containersRemoved = 0;
-    // pick only the most efficient containers to take out, out of all containers with matching names
-    while (containersRemoved < containersOut.length) {
-        currContainerName = minHeap.peek().name; // name of smallest cost item
-        if (numContOutMap.get(currContainerName) > 0) { // is there still containers of that name needed to be taken out
-            cost += minHeap.remove().cost;
-            numContOutMap.set(currContainerName, numContOutMap.get(currContainerName) - 1);
-            containersRemoved++;
+    if (containersOut.length > 0) { // if there are no containers to take out, no need to search for them
+        // find cost to unload each containers that has a name matching those in containersOut
+        let minHeap = new PriorityQueueNameCost();
+        for (let i = 0 + 27; i < 12 + 27; i++) { // left to right
+            for (let j = 9; j >= 2; j--) { // down to up
+                currContainerName = grid[j][i].name;
+                if (currContainerName === "UNUSED") {
+                    break;
+                }
+                if(numContOutMap.has(currContainerName)) { // current container has the name of one to be taken out
+                    minHeap.add(new NameCost(currContainerName, Math.abs(1 - j) + Math.abs(27 - i) + 6)); //manhattan distance to right pink square + 6 (4 to left pink sqaure and 2 to truck)
+                }
+            }
         }
-        else {
-            minHeap.remove();
+    
+        let containersRemoved = 0;
+        // pick only the most efficient containers to take out, out of all containers with matching names
+        while (containersRemoved < containersOut.length) {
+            currContainerName = minHeap.peek().name; // name of smallest cost item
+            if (numContOutMap.get(currContainerName) > 0) { // is there still containers of that name needed to be taken out
+                cost += minHeap.remove().cost;
+                numContOutMap.set(currContainerName, numContOutMap.get(currContainerName) - 1);
+                containersRemoved++;
+            }
+            else {
+                minHeap.remove();
+            }
         }
     }
 
