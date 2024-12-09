@@ -1,0 +1,12 @@
+.LogPanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Left panel for additional controls and information */
+.LogPanel {
+  width: 25%;
+  background-color: #f4f4f4;
+  padding: 10px;
+}
