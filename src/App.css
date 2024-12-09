@@ -24,6 +24,15 @@
   overflow: hidden;
 }
 
+/* Main container for the ManifestView component */
+.MainView {
+  display: flex;
+  flex: 10;
+  background-color: #fff;
+  color: #333;
+  height: 100%;
+}
+
 .Sidebar {
   flex: 1;
   background-color: #f0f0f0;

@@ -1,14 +1,5 @@
-/* Main container for the ManifestView component */
-.MainContent2 {
-  display: flex;
-  flex: 10;
-  background-color: #fff;
-  color: #333;
-  height: 100%;
-}
-
 .LeftPanel,
-.RightPanel {
+.ManifestView {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -22,7 +13,7 @@
 }
 
 /* Right panel that holds the grid layout */
-.RightPanel {
+.ManifestView {
   width: 75%;
   display: grid;
   grid-template-columns: repeat(12, 1fr); /* 12 equal columns */

@@ -5,10 +5,12 @@ import { PiCraneTowerLight } from "react-icons/pi";
 import { TbFileDownload } from "react-icons/tb";
 import { GiSave } from "react-icons/gi";
 import ManifestView from "./components/ManifestView.js";
+import LogPanel from "./components/LogPanel.js";
+import StepControlBar from "./components/StepControlBar.js";
 
 function App() {
   const fileInputRef = useRef(null);
-  const [grids, setGrids] = useState(null);
+  const [grids, setGrids] = useState([]);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [mode, setMode] = useState("loadUnload"); // Default mode
   const [userName, setUserName] = useState("");
@@ -124,7 +126,7 @@ function App() {
     }
   };
 
-  const markStepDone = () => {
+  const handleDoneStep = () => {
     if (completedSteps.has(currentStep)) {
       // If the step is already marked as completed, create a new Set without this step
       setCompletedSteps(
@@ -184,19 +186,16 @@ function App() {
             />
             <button onClick={handleLogin}>Log In</button>
           </div>
-          <div className="StepControlBar">
-            <span
-              className={`StepDetail ${
-                completedSteps.has(currentStep) ? "completed" : ""
-              }`}
-            >
-              From: {steps[currentStep]}
-            </span>
-            <button onClick={markStepDone}>Done</button>
-            <button onClick={handlePrevStep}>Back</button>
-            <button onClick={handleNextStep}>Next</button>
+          <StepControlBar
+            stepDescription={steps[currentStep]}
+            onDone={handleDoneStep}
+            onPrev={handlePrevStep}
+            onNext={handleNextStep}
+          />
+          <div className="MainView">
+            <LogPanel />
+            <ManifestView grid={grids?.[currentStep]} />
           </div>
-          <ManifestView grid={grids?.[currentStep]} />
         </div>
       </div>
     </div>
