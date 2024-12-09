@@ -1,125 +1,32 @@
 import BalanceShipState from "./BalanceShipState.js";
 import CalculateTransferCost from "./CalculateTransferCost.js";
 
-// https://www.geeksforgeeks.org/implementation-priority-queue-javascript/
-// Priority Queue implementation for the A* search frontier
-class PriorityQueue {
-  constructor() {
-    this.heap = [];
-  }
-  getLeftChildIndex(parentIndex) {
-    return 2 * parentIndex + 1;
-  }
-  getRightChildIndex(parentIndex) {
-    return 2 * parentIndex + 2;
-  }
-  getParentIndex(childIndex) {
-    return Math.floor((childIndex - 1) / 2);
-  }
-  hasLeftChild(index) {
-    return this.getLeftChildIndex(index) < this.heap.length;
-  }
-  hasRightChild(index) {
-    return this.getRightChildIndex(index) < this.heap.length;
-  }
-  hasParent(index) {
-    return this.getParentIndex(index) >= 0;
-  }
-  leftChild(index) {
-    return this.heap[this.getLeftChildIndex(index)];
-  }
-  rightChild(index) {
-    return this.heap[this.getRightChildIndex(index)];
-  }
-  parent(index) {
-    return this.heap[this.getParentIndex(index)];
-  }
-  swap(indexOne, indexTwo) {
-    const temp = this.heap[indexOne];
-    this.heap[indexOne] = this.heap[indexTwo];
-    this.heap[indexTwo] = temp;
-  }
-  peek() {
-    if (this.heap.length === 0) {
-      return null;
-    }
-    return this.heap[0];
-  }
-  remove() {
-    if (this.heap.length === 0) {
-      return null;
-    }
-    const item = this.heap[0];
-    this.heap[0] = this.heap[this.heap.length - 1];
-    this.heap.pop();
-    this.heapifyDown();
-    return item;
-  }
-  add(item) {
-    this.heap.push(item);
-    this.heapifyUp();
-  }
-  heapifyUp() {
-    let index = this.heap.length - 1;
-    while (
-      this.hasParent(index) &&
-      this.comparePriority(this.parent(index), this.heap[index]) > 0
-    ) {
-      this.swap(this.getParentIndex(index), index);
-      index = this.getParentIndex(index);
-    }
-  }
-  heapifyDown() {
-    let index = 0;
-    while (this.hasLeftChild(index)) {
-      let smallerChildIndex = this.getLeftChildIndex(index);
-      if (
-        this.hasRightChild(index) &&
-        this.comparePriority(this.leftChild(index), this.rightChild(index)) > 0
-      ) {
-        smallerChildIndex = this.getRightChildIndex(index);
-      }
-      if (
-        this.comparePriority(this.heap[smallerChildIndex], this.heap[index]) > 0
-      ) {
-        break;
-      } else {
-        this.swap(index, smallerChildIndex);
-      }
-      index = smallerChildIndex;
-    }
-  }
-  comparePriority(state1, state2) {
-    return state1.gCost + state1.hCost - (state2.gCost + state2.hCost);
-  }
-}
-
 export default class BalanceOperation {
   constructor(grid) {
+    let average = this.CalculateAverage(grid);
+    this.lowerBound = average * 0.9;
+    this.upperBound = average * 1.1;
     this.startState = new BalanceShipState(
       grid,
       0,
       1,
       null,
       0,
-      this.BalanceHeuristic(grid),
+      this.BalanceHeuristic(grid, this.lowerBound, this.upperBound),
       ""
     );
     this.frontier = new PriorityQueue();
     this.visitedStates = new Set();
     this.operationList = [];
     this.gridList = [];
-    let average = this.CalculateAverage();
-    this.lowerBound = average * 0.9;
-    this.upperBound = average * 1.1;
     this.goalState = undefined;
   }
   // Calculate the average of the total weight
-  CalculateAverage() {
+  CalculateAverage(grid) {
     let sum = 0.0;
-    for (let i = 0; i < this.startState.height; i++) {
-      for (let j = 0; j < this.startState.width; j++) {
-        sum += this.startState.grid[i][j].weight;
+    for (let i = 0; i < grid.length; i++) {
+      for (let j = 0; j < grid[0].length; j++) {
+        sum += grid[i][j].weight;
       }
     }
     return sum / 2;
@@ -199,8 +106,77 @@ export default class BalanceOperation {
     return cost;
   }
   // Balance heuristic function to guess the cost from a goal state
-  BalanceHeuristic(grid) {
-    return 0;
+  BalanceHeuristic(grid, lowerBound, upperBound) {
+    lowerBound = Math.ceil(lowerBound);
+    upperBound = Math.floor(upperBound);
+    let leftItemVect = [];
+    let rightItemVect = [];
+    for (let i = 0; i < grid.length; i++) {
+      for (let j = 0; j < grid[0].length / 2; j++) {
+        if (grid[i][j].name !== "UNUSED" && grid[i][j].name !== "NAN") {
+          leftItemVect.push([grid[i][j].weight, 6 - j]);
+        }
+      }
+    }
+    for (let i = 0; i < grid.length; i++) {
+      for (let j = grid[0].length / 2; j < grid[0].length; j++) {
+        if (grid[i][j].name !== "UNUSED" && grid[i][j].name !== "NAN") {
+          rightItemVect.push([grid[i][j].weight, j - 5]);
+        }
+      }
+    }
+    let DPVect = [];
+    for (let i = 0; i <= upperBound; i++) {
+      DPVect[i] = [0, 0, 0];
+    }
+    for (let i = 0; i < leftItemVect.length; i++) {
+      for (let j = upperBound; j >= 0; j--) {
+        // Check if current upper bound is greater than or equal to the item's weight
+        if (j >= leftItemVect[i][0]) {
+          // Check if adding the current container results in a weight to be closer to the max, if true then add it instead
+          if (
+            DPVect[j][0] <
+            DPVect[j - leftItemVect[i][0]][0] + leftItemVect[i][0]
+          ) {
+            DPVect[j][0] =
+              DPVect[j - leftItemVect[i][0]][0] + leftItemVect[i][0];
+            DPVect[j][1] = DPVect[j - leftItemVect[i][0]][1];
+            // DPVect[j][2] = DPVect[j - leftItemVect[i][0]][2] + leftItemVect[i][1];
+          }
+          // Otherwise move this container to the right
+          else {
+            DPVect[j][1] = DPVect[j][1] + leftItemVect[i][1];
+          }
+        }
+        // If not then automatically do not include this container on the left side (add the cost of moving the container to the right)
+        else {
+          DPVect[j][1] = DPVect[j][1] + leftItemVect[i][1];
+        }
+      }
+    }
+    for (let i = 0; i < rightItemVect.length; i++) {
+      for (let j = upperBound; j >= 0; j--) {
+        if (j >= rightItemVect[i][0]) {
+          // Check if adding the current container results in a weight to be closer to the max, if true then add it instead
+          if (
+            DPVect[j][0] <
+            DPVect[j - rightItemVect[i][0]][0] + rightItemVect[i][0]
+          ) {
+            DPVect[j][0] =
+              DPVect[j - rightItemVect[i][0]][0] + rightItemVect[i][0];
+            DPVect[j][1] =
+              DPVect[j - rightItemVect[i][0]][1] + rightItemVect[i][1];
+          }
+        }
+      }
+    }
+    let minVal = Number.MAX_SAFE_INTEGER;
+    for (let i = lowerBound; i <= upperBound; i++) {
+      if (DPVect[i][0] >= lowerBound) {
+        minVal = Math.min(minVal, DPVect[i][1]);
+      }
+    }
+    return minVal;
   }
 
   // SIFT heuristic function to guess the cost from a goal state
@@ -311,21 +287,6 @@ export default class BalanceOperation {
       currState = currState.parent;
     }
   }
-  // Checks if the given state is a balance goal state
-  CheckBalanceGoalState(state) {
-    let balanced =
-      state.leftHalfWeight <= this.upperBound &&
-      state.leftHalfWeight >= this.lowerBound;
-    let validSlots = true;
-    for (let i = 0; i < 2 && validSlots; i++) {
-      for (let j = 0; j < state.width && validSlots; j++) {
-        if (state.grid[i][j].name !== "UNUSED") {
-          validSlots = false;
-        }
-      }
-    }
-    return balanced && validSlots;
-  }
   // Operation function that expands the given balance state
   ExpandBalanceState(state) {
     for (let i = 0; i < state.width; i++) {
@@ -368,7 +329,11 @@ export default class BalanceOperation {
                     j,
                     state.topContainer
                   ),
-                this.BalanceHeuristic(newGrid),
+                this.BalanceHeuristic(
+                  newGrid,
+                  this.lowerBound,
+                  this.upperBound
+                ),
                 "Move container at (" +
                   (10 - originalY) +
                   ", " +
@@ -450,14 +415,15 @@ export default class BalanceOperation {
   }
   // Balance A* search with frontier and map for visited states
   BalanceOperationSearch() {
-    if (this.startState.BalanceHeuristic === -1) {
+    if (this.startState.hCost === Number.MAX_SAFE_INTEGER) {
+      console.log("Impossible to be balanced, executing SIFT.");
       this.SIFTOperationSearch();
     } else {
       this.frontier.add(this.startState);
       this.visitedStates.add(this.startState.grid);
       while (this.frontier.heap.length > 0) {
         let currState = this.frontier.remove();
-        if (this.CheckBalanceGoalState(currState)) {
+        if (currState.hCost === 0) {
           this.CreateLists(currState);
           this.goalState = currState;
           break;
@@ -486,5 +452,98 @@ export default class BalanceOperation {
       }
       this.ExpandSIFTState(currState);
     }
+  }
+}
+
+// https://www.geeksforgeeks.org/implementation-priority-queue-javascript/
+// Priority Queue implementation for the A* search frontier
+class PriorityQueue {
+  constructor() {
+    this.heap = [];
+  }
+  getLeftChildIndex(parentIndex) {
+    return 2 * parentIndex + 1;
+  }
+  getRightChildIndex(parentIndex) {
+    return 2 * parentIndex + 2;
+  }
+  getParentIndex(childIndex) {
+    return Math.floor((childIndex - 1) / 2);
+  }
+  hasLeftChild(index) {
+    return this.getLeftChildIndex(index) < this.heap.length;
+  }
+  hasRightChild(index) {
+    return this.getRightChildIndex(index) < this.heap.length;
+  }
+  hasParent(index) {
+    return this.getParentIndex(index) >= 0;
+  }
+  leftChild(index) {
+    return this.heap[this.getLeftChildIndex(index)];
+  }
+  rightChild(index) {
+    return this.heap[this.getRightChildIndex(index)];
+  }
+  parent(index) {
+    return this.heap[this.getParentIndex(index)];
+  }
+  swap(indexOne, indexTwo) {
+    const temp = this.heap[indexOne];
+    this.heap[indexOne] = this.heap[indexTwo];
+    this.heap[indexTwo] = temp;
+  }
+  peek() {
+    if (this.heap.length === 0) {
+      return null;
+    }
+    return this.heap[0];
+  }
+  remove() {
+    if (this.heap.length === 0) {
+      return null;
+    }
+    const item = this.heap[0];
+    this.heap[0] = this.heap[this.heap.length - 1];
+    this.heap.pop();
+    this.heapifyDown();
+    return item;
+  }
+  add(item) {
+    this.heap.push(item);
+    this.heapifyUp();
+  }
+  heapifyUp() {
+    let index = this.heap.length - 1;
+    while (
+      this.hasParent(index) &&
+      this.comparePriority(this.parent(index), this.heap[index]) > 0
+    ) {
+      this.swap(this.getParentIndex(index), index);
+      index = this.getParentIndex(index);
+    }
+  }
+  heapifyDown() {
+    let index = 0;
+    while (this.hasLeftChild(index)) {
+      let smallerChildIndex = this.getLeftChildIndex(index);
+      if (
+        this.hasRightChild(index) &&
+        this.comparePriority(this.leftChild(index), this.rightChild(index)) > 0
+      ) {
+        smallerChildIndex = this.getRightChildIndex(index);
+      }
+      if (
+        this.comparePriority(this.heap[smallerChildIndex], this.heap[index]) > 0
+      ) {
+        break;
+      } else {
+        this.swap(index, smallerChildIndex);
+      }
+      index = smallerChildIndex;
+    }
+  }
+  comparePriority(state1, state2) {
+    return state1.gCost + state1.hCost - (state2.gCost + state2.hCost);
   }
 }
