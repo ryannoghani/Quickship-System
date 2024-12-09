@@ -7,11 +7,12 @@ import { GiSave } from "react-icons/gi";
 import ManifestView from "./components/ManifestView.js";
 import LogPanel from "./components/LogPanel.js";
 import StepControlBar from "./components/StepControlBar.js";
+import Clock from "./functions/Clock.js";
 
 function App() {
   const fileInputRef = useRef(null);
   const [grids, setGrids] = useState([]);
-  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const [currentDateTime, setCurrentDateTime] = useState(new Clock());
   const [mode, setMode] = useState("loadUnload"); // Default mode
   const [userName, setUserName] = useState("");
   const [currentUser, setCurrentUser] = useState("");
@@ -90,7 +91,7 @@ function App() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentDateTime(new Date());
+      setCurrentDateTime(new Clock());
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -142,8 +143,7 @@ function App() {
     <div className="App">
       <div className="TopBar">
         <div className="AppName">QuickShip</div>
-        <div className="Time">{currentDateTime.toLocaleTimeString()}</div>
-        <div className="Date">{currentDateTime.toLocaleDateString()}</div>
+        <div className="Time">{currentDateTime.GetTime()}</div>
       </div>
       <div className="Content">
         <div className="Sidebar">
