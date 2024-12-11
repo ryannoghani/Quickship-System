@@ -22,6 +22,26 @@ function App() {
   ]); // Example steps
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState(new Set()); // Tracks completed steps
+//**************************************************************** */
+  const addToLog = (message) => {
+    const newLog = [...log, `${new Date().toLocaleString()}: ${message}`];
+    setLog(newLog);
+  };
+
+  useEffect(() => {
+    if (log.length > 0) {
+      const blob = new Blob([log.join('\n')], { type: 'text/plain' });
+      const href = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = href;
+      link.download = `QuickShipLog${new Date().getFullYear()}.txt`; // Adjust the filename as necessary
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(href);
+    }
+  }, [log]);
+  //********************************************************** */
 
   const triggerFileInput = () => {
     if (fileInputRef.current) {
@@ -193,7 +213,7 @@ function App() {
             onNext={handleNextStep}
           />
           <div className="MainView">
-            <LogPanel />
+            <LogPanel log={log} addToLog={addToLog} />
             <ManifestView grid={grids?.[currentStep]} />
           </div>
         </div>
