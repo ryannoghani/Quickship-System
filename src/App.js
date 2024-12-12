@@ -118,18 +118,6 @@ function App() {
     }
   };
 
-  const handleDoneStep = () => {
-    if (completedSteps.has(stepIndex)) {
-      // If the step is already marked as completed, create a new Set without this step
-      setCompletedSteps(
-        new Set([...completedSteps].filter((step) => step !== stepIndex))
-      );
-    } else {
-      // Otherwise, add this step to the Set of completed steps
-      setCompletedSteps(new Set(completedSteps.add(stepIndex)));
-    }
-  };
-
   const handleStart = () => {
     if (mode === "balance") {
       let balanceOp = new BalanceOperation(grids[0]);
@@ -195,8 +183,7 @@ function App() {
           <StepControlBar
             isActive={isActive}
             index={stepIndex}
-            stepDescription={steps[stepIndex]}
-            onDone={handleDoneStep}
+            steps={steps}
             onPrev={handlePrevStep}
             onNext={handleNextStep}
           />

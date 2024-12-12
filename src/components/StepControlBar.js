@@ -4,26 +4,32 @@ import "./StepControlBar.css";
 export default function StepControlBar({
   isActive,
   index,
-  stepDescription,
-  onDone,
+  steps,
   onPrev,
   onNext,
 }) {
   let msg = "";
-  if (stepDescription !== undefined) {
-    msg = "Step " + (index + 1) + ": " + stepDescription;
+  if (steps.length > 0) {
+    msg = "Step " + (index + 1) + ": " + steps[index];
   }
+
+  let nextOrDone = "Next";
+  let onNextOrDone = onNext;
+  if (index === steps.length - 1) {
+    nextOrDone = "Done";
+    onNextOrDone = () => {
+      alert("Don't forget to save and email the manifest.");
+    };
+  }
+
   return (
     <div className="StepControlBar">
       <span>{msg}</span>
-      <button onClick={onDone} disabled={!isActive}>
-        Done
-      </button>
       <button onClick={onPrev} disabled={!isActive}>
         Back
       </button>
-      <button onClick={onNext} disabled={!isActive}>
-        Next
+      <button onClick={onNextOrDone} disabled={!isActive}>
+        {nextOrDone}
       </button>
     </div>
   );

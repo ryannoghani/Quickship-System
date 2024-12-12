@@ -34,16 +34,19 @@ export default class BalanceOperation {
   }
   CreateLists(goalState) {
     let currState = goalState;
-    if(currState == this.startState) {
-      if(this.balanceMode) {
+    if (currState == this.startState) {
+      if (this.balanceMode) {
         this.operationList.unshift("The ship is already balanced!");
-      }
-      else {
-        this.operationList.unshift("The ship is already in SIFT configuration!");
+      } else {
+        this.operationList.unshift(
+          "The ship is already in SIFT configuration!"
+        );
       }
     }
-    if(goalState.craneX != 0 && goalState.craneY != 1) {
-      this.operationList.unshift("Move crane back to starting location at (1, 9)");
+    if (goalState.craneX != 0 && goalState.craneY != 1) {
+      this.operationList.unshift(
+        "Move crane back to starting location at (1, 9)"
+      );
     }
     while (currState.parent != null) {
       this.operationList.unshift(currState.operation);
@@ -340,25 +343,24 @@ export default class BalanceOperation {
                 j,
                 finalY,
                 state,
-                state.gCost +
-                  currCost,
+                state.gCost + currCost,
                 this.BalanceHeuristic(
                   newGrid,
                   this.lowerBound,
                   this.upperBound
                 ),
-                  "Move the crane to " + 
+                "Move crane to " +
                   "(" +
-                  (i + 1) +
-                  ", " +
                   (10 - originalY) +
-                  ") and move this container to (" +
-                  (j + 1) +
                   ", " +
+                  (i + 1) +
+                  ") and move container to (" +
                   (10 - finalY) +
-                  ") which has a cost of " +
+                  ", " +
+                  (j + 1) +
+                  ") (Estimate  " +
                   currCost +
-                  "minutes"
+                  " minutes)"
               );
               this.frontier.add(newState);
               this.visitedStates.add(key);
