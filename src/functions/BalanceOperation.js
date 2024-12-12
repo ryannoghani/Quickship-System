@@ -413,15 +413,18 @@ export default class BalanceOperation {
                     state.topContainer
                   ),
                 this.SIFTHeuristic(newGrid)[0],
-                "Move container at (" +
+                "Move crane to " +
+                  "(" +
                   (10 - originalY) +
                   ", " +
                   (i + 1) +
-                  ") to (" +
+                  ") and move container to (" +
                   (10 - finalY) +
                   ", " +
                   (j + 1) +
-                  ")"
+                  ") (Estimate  " +
+                  currCost +
+                  " minutes)"
               );
               this.frontier.add(newState);
               this.visitedStates.add(key);
