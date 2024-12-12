@@ -3,6 +3,15 @@ import heuristic from "./LoadUnloadHeuristic.js";
 
 export default class LoadUnloadOperation {
   constructor(grid, _loadList, _unloadList) {
+    let unloadMap = new Map(); //maps how many containers of a specific name to take out
+    for (let i = 0; i < _unloadList.length; i++) {
+      if (unloadMap.has(_unloadList[i])) { //if already in map, increment
+        unloadMap.set(_unloadList[i], unloadMap.get(_unloadList[i]) + 1);
+      }
+      else { //new map item
+        unloadMap.set(_unloadList[i], 1);
+      }
+    }
     this.startState = new LoadUnloadShipState(
       grid,
       0,
@@ -10,23 +19,15 @@ export default class LoadUnloadOperation {
       null,
       0,
       this.LoadUnloadHeuristic(),
-      ""
+      "",
+      unloadMap,
+      _loadList
     );
     this.frontier = new PriorityQueue();
     this.visitedStates = new Set();
-    this.loadList = _loadList;
     this.operationList = [];
     this.gridList = [];
     this.goalState = undefined;
-    this.unloadMap = new Map(); //maps how many containers of a specific name to take out
-    for (let i = 0; i < _unloadList.length; i++) {
-        if (unloadMap.has(_unloadList[i])) { //if already in map, increment
-          unloadMap.set(_unloadList[i], unloadMap.get(_unloadList[i]) + 1);
-        }
-        else { //new map item
-          unloadMap.set(_unloadList[i], 1);
-        }
-    }
   }
   // Create an array for the list of operations and the list of grids
   CreateLists(goalState) {
