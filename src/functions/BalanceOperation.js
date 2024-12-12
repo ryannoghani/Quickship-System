@@ -410,14 +410,7 @@ export default class BalanceOperation {
                 j,
                 finalY,
                 state,
-                state.gCost +
-                  this.CalculateCost(
-                    state.craneX,
-                    state.craneY,
-                    i,
-                    j,
-                    state.topContainer
-                  ),
+                state.gCost + currCost,
                 this.SIFTHeuristic(newGrid)[0],
                 "Move crane to " +
                   "(" +
