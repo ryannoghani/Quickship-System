@@ -164,7 +164,6 @@ export default class BalanceOperation {
             DPVect[j][0] =
               DPVect[j - leftItemVect[i][0]][0] + leftItemVect[i][0];
             DPVect[j][1] = DPVect[j - leftItemVect[i][0]][1];
-            // DPVect[j][2] = DPVect[j - leftItemVect[i][0]][2] + leftItemVect[i][1];
           }
           // Otherwise move this container to the right
           else {
@@ -399,6 +398,13 @@ export default class BalanceOperation {
               }
             }
             if (!this.visitedStates.has(key)) {
+              let currCost = this.CalculateCost(
+                state.craneX,
+                state.craneY,
+                i,
+                j,
+                state.topContainer
+              );
               let newState = new BalanceShipState(
                 newGrid,
                 j,
