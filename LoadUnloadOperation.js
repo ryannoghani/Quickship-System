@@ -156,18 +156,18 @@ export default class LoadUnloadOperation {
                 this.LoadUnloadHeuristic(
                   
                 ),
-                "Move the crane to " + 
+                "Move crane to " +
                 "(" +
-                (i + 1) +
-                ", " +
                 (10 - originalY) +
-                ") and move this container to (" +
-                (j + 1) +
                 ", " +
+                (i + 1) +
+                ") and move container to (" +
                 (10 - finalY) +
-                ") which has a cost of " +
+                ", " +
+                (j + 1) +
+                ") (Estimate  " +
                 currCost +
-                "minutes"
+                " minutes)"
               );
               this.frontier.add(newState);
               this.visitedStates.add(key);
