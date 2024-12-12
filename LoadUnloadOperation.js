@@ -15,10 +15,18 @@ export default class LoadUnloadOperation {
     this.frontier = new PriorityQueue();
     this.visitedStates = new Set();
     this.loadList = _loadList;
-    this.unloadList = _unloadList;
     this.operationList = [];
     this.gridList = [];
     this.goalState = undefined;
+    this.unloadMap = new Map(); //maps how many containers of a specific name to take out
+    for (let i = 0; i < _unloadList.length; i++) {
+        if (unloadMap.has(_unloadList[i])) { //if already in map, increment
+          unloadMap.set(_unloadList[i], unloadMap.get(_unloadList[i]) + 1);
+        }
+        else { //new map item
+          unloadMap.set(_unloadList[i], 1);
+        }
+    }
   }
   // Create an array for the list of operations and the list of grids
   CreateLists(goalState) {
@@ -112,11 +120,18 @@ export default class LoadUnloadOperation {
     return cost;
   }
   // Load/unload heuristic function to guess the cost from a goal state
-  LoadUnloadHeuristic(inList, outList, grid) {
+  LoadUnloadHeuristic(inList, outList, state) {
     return heuristic(inList, outList, grid);
   }
   // Operation function that expands the given load/unload state
   ExpandLoadUnloadState(state) {
+    let key = "";
+    for(let k = 0; k < state.grid.length; k++) {
+      for(let l = 0; l < state.grid[k].length; l++) {
+        key += state.grid[k][l].name;
+      }
+    }
+    this.visitedStates.add(key);
     for(let i = 0; i < state.width; i++) {
       let originalY = state.topContainer[i];
       if(!(i === state.craneX && originalY === state.craneY) && originalY < 10 && state.grid[originalY][i].name !== "NAN") {
@@ -133,12 +148,6 @@ export default class LoadUnloadOperation {
             let temp = newGrid[finalY][j];
             newGrid[finalY][j] = newGrid[originalY][i];
             newGrid[originalY][i] = temp;
-            let key = "";
-            for(let k = 0; k < newGrid.length; k++) {
-              for(let l = 0; l < newGrid[k].length; l++) {
-                key += newGrid[k][l].name;
-              }
-            }
             if(!this.visitedStates.has(key)) {
               let currCost = this.CalculateCost(
                 state.craneX,
@@ -170,7 +179,6 @@ export default class LoadUnloadOperation {
                 " minutes)"
               );
               this.frontier.add(newState);
-              this.visitedStates.add(key);
             }
           }
         }
