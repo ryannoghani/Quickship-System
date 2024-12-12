@@ -29,15 +29,13 @@ function App() {
   };
 
   const handleLoadManifest = (event) => {
-    setIsActive(true);
-    if (grids.length > 0) {
-      if (
-        !window.confirm(
-          "A session is already active. Overwrite it and start a new one? Unsaved progress will be lost."
-        )
-      ) {
-        return;
-      }
+    if (
+      isActive === true &&
+      !window.confirm(
+        "A session is already active. Overwrite it and start a new one? Unsaved progress will be lost."
+      )
+    ) {
+      return;
     }
     setSteps([]);
     setStepIndex(0);
@@ -52,6 +50,8 @@ function App() {
       let grid = translator.ConvertManifestToGrid(fileString);
       setGrids([grid]); // Update the state
     };
+
+    setIsActive(true);
   };
 
   const handleSaveManifest = () => {
@@ -110,6 +110,11 @@ function App() {
     if (stepIndex < grids.length - 1) {
       setStepIndex(stepIndex + 1);
     }
+  };
+
+  const handleDoneStep = () => {
+    alert("Don't forget to save and email the manifest.");
+    setIsActive(false);
   };
 
   const handlePrevStep = () => {
@@ -186,6 +191,7 @@ function App() {
             steps={steps}
             onPrev={handlePrevStep}
             onNext={handleNextStep}
+            onDone={handleDoneStep}
           />
           <div className="MainView">
             <LogPanel />
