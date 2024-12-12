@@ -20,6 +20,7 @@ export default class BalanceOperation {
     this.operationList = [];
     this.gridList = [];
     this.goalState = undefined;
+    this.balanceMode = true;
   }
   // Calculate the average of the total weight
   CalculateAverage(grid) {
@@ -30,6 +31,25 @@ export default class BalanceOperation {
       }
     }
     return sum / 2;
+  }
+  CreateLists(goalState) {
+    let currState = goalState;
+    if(currState == this.startState) {
+      if(this.balanceMode) {
+        this.operationList.unshift("The ship is already balanced!");
+      }
+      else {
+        this.operationList.unshift("The ship is already in SIFT configuration!");
+      }
+    }
+    if(goalState.craneX != 0 && goalState.craneY != 1) {
+      this.operationList.unshift("Move crane back to starting location at (1, 9)");
+    }
+    while (currState.parent != null) {
+      this.operationList.unshift(currState.operation);
+      this.gridList.unshift(currState.grid);
+      currState = currState.parent;
+    }
   }
   // Calculate total cost of an operation
   CalculateCost(craneX, craneY, boxStartCol, boxEndCol, topContainers) {
@@ -279,14 +299,6 @@ export default class BalanceOperation {
     }
     return [total_cost, is_goal_state];
   }
-  CreateLists(goalState) {
-    let currState = goalState;
-    while (currState.parent != null) {
-      this.operationList.unshift(currState.operation);
-      this.gridList.unshift(currState.grid);
-      currState = currState.parent;
-    }
-  }
   // Operation function that expands the given balance state
   ExpandBalanceState(state) {
     for (let i = 0; i < state.width; i++) {
@@ -316,33 +328,37 @@ export default class BalanceOperation {
               }
             }
             if (!this.visitedStates.has(key)) {
+              let currCost = this.CalculateCost(
+                state.craneX,
+                state.craneY,
+                i,
+                j,
+                state.topContainer
+              );
               let newState = new BalanceShipState(
                 newGrid,
                 j,
                 finalY,
                 state,
                 state.gCost +
-                  this.CalculateCost(
-                    state.craneX,
-                    state.craneY,
-                    i,
-                    j,
-                    state.topContainer
-                  ),
+                  currCost,
                 this.BalanceHeuristic(
                   newGrid,
                   this.lowerBound,
                   this.upperBound
                 ),
-                "Move container at (" +
-                  (10 - originalY) +
-                  ", " +
+                  "Move the crane to " + 
+                  "(" +
                   (i + 1) +
-                  ") to (" +
-                  (10 - finalY) +
                   ", " +
+                  (10 - originalY) +
+                  ") and move this container to (" +
                   (j + 1) +
-                  ")"
+                  ", " +
+                  (10 - finalY) +
+                  ") which has a cost of " +
+                  currCost +
+                  "minutes"
               );
               this.frontier.add(newState);
               this.visitedStates.add(key);
@@ -435,6 +451,7 @@ export default class BalanceOperation {
   // SIFT A* search for frontier and map for visited states
   // Currently has no heuristic so appears to take too long to test
   SIFTOperationSearch() {
+    this.balanceMode = false;
     this.sortedContainers = this.startState.grid
       .flat()
       .filter(
