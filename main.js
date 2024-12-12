@@ -1,5 +1,5 @@
-const ManifestGridTranslator = require("./ManifestGridTranslator");
-const LoadUnloadOperation = require("./LoadUnloadOperation");
+import ManifestGridTranslator from "./ManifestGridTranslator.js";
+import LoadUnloadOperation from "./LoadUnloadOperation.js";
 
 let testManifestGridTranslator = new ManifestGridTranslator();
 let grid = testManifestGridTranslator.ConvertManifestToGrid("Manifests/ShipCase5.txt");
