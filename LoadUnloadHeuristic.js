@@ -94,6 +94,9 @@ class PriorityQueueNameCost {
 function LoadUnloadHeuristic (containersIn, numContOutMap, grid) {
     let cost  = 0;
     let currContainerName = "";
+    for (const value of numContOutMap.values()) { // figure out total amount of containers to remove
+        numContainersToRemove += value;
+    }
 
     cost += 3 * (containersIn.length); // cost for containers still to be loaded. 2 from truck to pink right, 1 to get into valid ship slot
     
@@ -123,8 +126,8 @@ function LoadUnloadHeuristic (containersIn, numContOutMap, grid) {
         }
     }
 
-    if (containersOut.length > 0) { // if there are no containers to take out, no need to search for them
-        // find cost to unload each containers that has a name matching those in containersOut
+    if (numContainersToRemove  > 0) { // if there are no containers to take out, no need to search for them
+        // find cost to unload each containers that has a name matching those in numContOutMap
         let minHeap = new PriorityQueueNameCost();
         for (let i = 27; i < 39; i++) { // left to right
             for (let j = 9; j >= 2; j--) { // down to up
@@ -140,7 +143,7 @@ function LoadUnloadHeuristic (containersIn, numContOutMap, grid) {
     
         let containersRemoved = 0;
         // pick only the most efficient containers to take out, out of all containers with matching names
-        while (containersRemoved < containersOut.length) {
+        while (containersRemoved < numContainersToRemove ) {
             currContainerName = minHeap.peek().name; // name of smallest cost item
             if (numContOutMap.get(currContainerName) > 0) { // is there still containers of that name needed to be taken out
                 cost += minHeap.remove().cost;
