@@ -303,6 +303,7 @@ export default class BalanceOperation {
   }
   // Operation function that expands the given balance state
   ExpandBalanceState(state) {
+    this.visitedStates.add(state.key);
     for (let i = 0; i < state.width; i++) {
       let originalY = state.topContainer[i];
       if (
@@ -359,10 +360,10 @@ export default class BalanceOperation {
                   (j + 1) +
                   ") (Estimate  " +
                   currCost +
-                  " minutes)"
+                  " minutes)",
+                key
               );
               this.frontier.add(newState);
-              this.visitedStates.add(key);
             }
           }
         }
@@ -371,6 +372,7 @@ export default class BalanceOperation {
   }
   // Operation function that expands the given SIFT state
   ExpandSIFTState(state) {
+    this.visitedStates.add(state.key);
     for (let i = 0; i < state.width; i++) {
       let originalY = state.topContainer[i];
       if (
@@ -423,10 +425,10 @@ export default class BalanceOperation {
                   (j + 1) +
                   ") (Estimate  " +
                   currCost +
-                  " minutes)"
+                  " minutes)",
+                key
               );
               this.frontier.add(newState);
-              this.visitedStates.add(key);
             }
           }
         }
