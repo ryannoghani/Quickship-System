@@ -160,7 +160,7 @@ export default class LoadUnloadOperation {
               i,
               25,
               state.topContainer
-            ) - 2;
+            );
             let newMap = new Map(state.unloadMap);
             let val = newMap.get(state.grid[originalY][i].name);
             if(val <= 1) {
@@ -181,7 +181,7 @@ export default class LoadUnloadOperation {
               (10 - originalY) +
               ", " +
               (i - 26) +
-              ") and unload container (Estimate " +
+              ") in the ship and unload container (Estimate " +
               currCost +
               " minutes)",
               newMap,
@@ -236,7 +236,7 @@ export default class LoadUnloadOperation {
               (10 - originalY) +
               ", " +
               (i - 26) +
-              ") and move container to (" +
+              ") in the ship and move container to (" +
               (6 - finalY) +
               ", " +
               (j + 1) +
@@ -291,11 +291,11 @@ export default class LoadUnloadOperation {
                 (10 - originalY) +
                 ", " +
                 (i - 26) +
-                ") and move container to (" +
+                ") in the ship and move container to (" +
                 (10 - finalY) +
                 ", " +
                 (j - 26) +
-                ") (Estimate " +
+                ") in the ship (Estimate " +
                 currCost +
                 " minutes)",
                 state.unloadMap,
