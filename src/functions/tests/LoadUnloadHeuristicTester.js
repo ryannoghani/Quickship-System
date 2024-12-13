@@ -92,8 +92,10 @@ class PriorityQueueNameCost {
 }
 
 let containersIn = ["STATER BROS", "AMAZON"];
-let containersOut = ["WALMART", "TARGET", "WALMART", "RALPHS", "RALPHS"];
-//let containersOut = [];
+let numContOutMap = new Map();
+numContOutMap.set("WALMART", 2);
+numContOutMap.set("TARGET", 1);
+numContOutMap.set("RALPHS", 2);
 
 let grid = [
 
@@ -109,18 +111,13 @@ let grid = [
     ["NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "NAN", "RALPHS", "UNUSED", "TARGET", "UNUSED", "UNUSED", "WALMART", "UNUSED", "UNUSED", "WALMART", "UNUSED", "WALMART", "WALMART"],
 ];
 
-let numContOutMap = new Map(); //maps how many containers of a specific name to take out
-for (let i = 0; i < containersOut.length; i++) {
-    if (numContOutMap.has(containersOut[i])) { //if already in map, increment
-        numContOutMap.set(containersOut[i], numContOutMap.get(containersOut[i]) + 1);
-    }
-    else { //new map item
-        numContOutMap.set(containersOut[i], 1);
-    }
-}
-
+// start of function
 let cost  = 0;
 let currContainerName = "";
+let numContainersToRemove = 0;
+for (const value of numContOutMap.values()) { // figure out total amount of containers to remove
+    numContainersToRemove += value;
+}
 
 cost += 3 * (containersIn.length); // cost for containers still to be loaded. 2 from truck to pink right, 1 to get into valid ship slot
 console.log("Cost after loading containers: " + cost + "\n");
@@ -154,8 +151,8 @@ for (let i = 27; i < 39; i++) {
 }
 console.log("Cost after clearing above row 8 on ship: " + cost + "\n");
 
-if (containersOut.length > 0) {
-        // find cost to unload each containers that has a name matching those in containersOut
+if (numContainersToRemove > 0) {
+        // find cost to unload each containers that has a name matching those in numContOutMap
     let minHeap = new PriorityQueueNameCost();
     for (let i = 0 + 27; i < 12 + 27; i++) { // left to right
         for (let j = 9; j >= 2; j--) { // down to up
@@ -175,7 +172,7 @@ if (containersOut.length > 0) {
 
     let containersRemoved = 0;
     // pick only the most efficient containers to take out, out of all containers with matching names
-    while (containersRemoved < containersOut.length) {
+    while (containersRemoved < numContainersToRemove) {
         currContainerName = minHeap.peek().name; // name of smallest cost item
         if (numContOutMap.get(currContainerName) > 0) { // is there still containers of that name needed to be taken out
             console.log("Need " + minHeap.peek().name + ". Adding cost. New total is " + (cost + minHeap.peek().cost));
