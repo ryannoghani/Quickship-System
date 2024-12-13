@@ -91,9 +91,11 @@ class PriorityQueueNameCost {
     }
 }
 
-function LoadUnloadHeuristic (containersIn, numContOutMap, grid) {
+function LoadUnloadHeuristic (containersIn, containersOutMap, grid) {
+    let numContOutMap = new Map(containersOutMap);
     let cost  = 0;
     let currContainerName = "";
+    let numContainersToRemove = 0;
     for (const value of numContOutMap.values()) { // figure out total amount of containers to remove
         numContainersToRemove += value;
     }
@@ -126,7 +128,7 @@ function LoadUnloadHeuristic (containersIn, numContOutMap, grid) {
         }
     }
 
-    if (numContainersToRemove  > 0) { // if there are no containers to take out, no need to search for them
+    if (numContainersToRemove > 0) { // if there are no containers to take out, no need to search for them
         // find cost to unload each containers that has a name matching those in numContOutMap
         let minHeap = new PriorityQueueNameCost();
         for (let i = 27; i < 39; i++) { // left to right
@@ -136,14 +138,14 @@ function LoadUnloadHeuristic (containersIn, numContOutMap, grid) {
                     break;
                 }
                 if(numContOutMap.has(currContainerName)) { // current container has the name of one to be taken out
-                    minHeap.add(new NameCost(currContainerName, Math.abs(1 - j) + Math.abs(27 - i) + 6)); //manhattan distance to right pink square + 6 (4 to left pink sqaure and 2 to truck)
+                    minHeap.add(new NameCost(currContainerName, Math.abs(1 - j) + Math.abs(27 - i) + 2)); //manhattan distance to right pink square + 2 to go to truck
                 }
             }
         }
     
         let containersRemoved = 0;
         // pick only the most efficient containers to take out, out of all containers with matching names
-        while (containersRemoved < numContainersToRemove ) {
+        while (containersRemoved < numContainersToRemove) {
             currContainerName = minHeap.peek().name; // name of smallest cost item
             if (numContOutMap.get(currContainerName) > 0) { // is there still containers of that name needed to be taken out
                 cost += minHeap.remove().cost;
