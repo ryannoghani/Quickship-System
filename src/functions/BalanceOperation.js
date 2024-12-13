@@ -50,7 +50,7 @@ export default class BalanceOperation {
         );
       }
     }
-    if (goalState.craneX != 0 && goalState.craneY != 1) {
+    if (!(goalState.craneX == 27 && goalState.craneY == 1)) {
       this.operationList.unshift(
         "Move crane back to starting location at (1, 9)"
       );
