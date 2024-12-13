@@ -91,9 +91,13 @@ class PriorityQueueNameCost {
     }
 }
 
-function numGridCont(grid) {
-    let cnt = 0;
+function LoadUnloadHeuristic (containersIn, numContOutMap, grid) {
+    let cost  = 0;
     let currContainerName = "";
+
+    cost += 3 * (containersIn.length); // cost for containers still to be loaded. 2 from truck to pink right, 1 to get into valid ship slot
+    
+    // cost for containers still in buffer.
     for (let i = 0; i < 24; i++) { // left to right
         for (let j = 5; j >= 0; j--) { // down to up
             currContainerName = grid[j][i].name;
@@ -101,33 +105,13 @@ function numGridCont(grid) {
                 break;
             }
             else if (currContainerName !== "NAN") {
-                cnt++;
+                cost += (Math.abs(1 - j) + Math.abs(23 - i) + 5); // manhattan distance to pink left. 4 to pink right. 1 to valid ship slot
             }
         }
     }
-    return cnt;
-}
-
-export default function heuristic (containersIn, containersOut, grid) {
-    let cost  = 0;
-
-    cost += 7 * (containersIn.length); // cost for containers still to be loaded. 2 from truck to pink left, 4 from pink left to pink right, 1 to get into valid ship slot
-    cost += 5 * (numGridCont(grid)); // cost for containers still in buffer. 4 from pink left to pink right, 1 into valid ship slot
-
-    let numContOutMap = new Map(); //maps how many containers of a specific name to take out
-    for (let i = 0; i < containersOut.length; i++) {
-        if (numContOutMap.has(containersOut[i])) { //if already in map, increment
-            numContOutMap.set(containersOut[i], numContOutMap.get(containersOut[i]) + 1);
-        }
-        else { //new map item
-            numContOutMap.set(containersOut[i], 1);
-        }
-    }
-
-    let currContainerName;
-
+    
     // find cost of moving all non unloadable containers above row 8 back into ship
-    for (let i = 0 + 27; i < 12 + 27; i++) {
+    for (let i = 27; i < 39; i++) {
         for (let j = 1; j >= 0; j--) {
             currContainerName = grid[j][i].name;
             if (currContainerName === "UNUSED") {
@@ -142,7 +126,7 @@ export default function heuristic (containersIn, containersOut, grid) {
     if (containersOut.length > 0) { // if there are no containers to take out, no need to search for them
         // find cost to unload each containers that has a name matching those in containersOut
         let minHeap = new PriorityQueueNameCost();
-        for (let i = 0 + 27; i < 12 + 27; i++) { // left to right
+        for (let i = 27; i < 39; i++) { // left to right
             for (let j = 9; j >= 2; j--) { // down to up
                 currContainerName = grid[j][i].name;
                 if (currContainerName === "UNUSED") {
