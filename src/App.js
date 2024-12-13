@@ -134,6 +134,23 @@ function App() {
     }
   };
 
+  const handleOnLoad = (row, col) => {
+    const newName = prompt("Enter a new container name");
+    const newWeight = prompt("Enter a new weight");
+    let newGrids = grids.slice(0, stepIndex);
+    let modifiedGrid = grids[stepIndex];
+    modifiedGrid[row][col].name = newName;
+    modifiedGrid[row][col].weight = newWeight;
+
+    newGrids.push(modifiedGrid);
+
+    //Call the load/unload algorithm again
+    let balanceOp = new BalanceOperation(modifiedGrid);
+    balanceOp.BalanceOperationSearch();
+    newGrids.pop();
+    setGrids(newGrids.push(...balanceOp.gridList));
+  };
+
   return (
     <div className="App">
       <div className="TopBar">
@@ -195,7 +212,7 @@ function App() {
           />
           <div className="MainView">
             <LogPanel />
-            <ManifestView grid={grids?.[stepIndex]} />
+            <ManifestView grid={grids?.[stepIndex]} onLoad={handleOnLoad} />
           </div>
         </div>
       </div>
