@@ -6,6 +6,12 @@ export default class BalanceOperation {
     let average = this.CalculateAverage(grid);
     this.lowerBound = average * 0.9;
     this.upperBound = average * 1.1;
+    let key = "";
+    for (let k = 0; k < grid.length; k++) {
+      for (let l = 0; l < grid[k].length; l++) {
+        key += grid[k][l].name;
+      }
+    }
     this.startState = new BalanceShipState(
       grid,
       0,
@@ -13,7 +19,8 @@ export default class BalanceOperation {
       null,
       0,
       this.BalanceHeuristic(grid, this.lowerBound, this.upperBound),
-      ""
+      "",
+      key
     );
     this.frontier = new PriorityQueue();
     this.visitedStates = new Set();
