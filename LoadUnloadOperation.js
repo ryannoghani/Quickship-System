@@ -21,7 +21,8 @@ export default class LoadUnloadOperation {
       this.LoadUnloadHeuristic(),
       "",
       unloadMap,
-      _loadList
+      _loadList,
+      key
     );
     this.frontier = new PriorityQueue();
     this.visitedStates = new Set();
@@ -126,13 +127,7 @@ export default class LoadUnloadOperation {
   }
   // Operation function that expands the given load/unload state
   ExpandLoadUnloadState(state) {
-    let key = "";
-    for(let k = 0; k < state.grid.length; k++) {
-      for(let l = 0; l < state.grid[k].length; l++) {
-        key += state.grid[k][l].name;
-      }
-    }
-    this.visitedStates.add(key);
+    this.visitedStates.add(state.key);
     for(let i = 0; i < state.width; i++) {
       let originalY = state.topContainer[i];
       if(!(i === state.craneX && originalY === state.craneY) && originalY < 10 && state.grid[originalY][i].name !== "NAN") {
@@ -149,6 +144,12 @@ export default class LoadUnloadOperation {
             let temp = newGrid[finalY][j];
             newGrid[finalY][j] = newGrid[originalY][i];
             newGrid[originalY][i] = temp;
+            let key = "";
+            for(let k = 0; k < state.grid.length; k++) {
+              for(let l = 0; l < state.grid[k].length; l++) {
+                key += state.grid[k][l].name;
+              }
+            }
             if(!this.visitedStates.has(key)) {
               let currCost = this.CalculateCost(
                 state.craneX,
@@ -177,7 +178,8 @@ export default class LoadUnloadOperation {
                 (j + 1) +
                 ") (Estimate  " +
                 currCost +
-                " minutes)"
+                " minutes)",
+                key
               );
               this.frontier.add(newState);
             }
