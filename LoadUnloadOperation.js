@@ -443,6 +443,23 @@ export default class LoadUnloadOperation {
       this.ExpandLoadUnloadState(currState);
     }
   }
+  SplitGrid(grid) {
+    // copy over buffer
+    for (let i = 2; i < 6; i++) {
+      this.bufferGridList[i - 2] = [];
+      for (let j = 0; j < 24; j++) {
+        this.bufferGridList[i - 2][j] = grid[i][j];
+      }
+    }
+
+    // copy over ship
+    for (let i = 0; i < 10; i++) {
+      this.shipGridList[i] = [];
+      for (let j = 0; j < 12; j++) {
+        this.bufferGridList[i][j] = grid[i][j];
+      }
+    }
+  }
 }
 
 // https://www.geeksforgeeks.org/implementation-priority-queue-javascript/
