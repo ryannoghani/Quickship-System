@@ -6,7 +6,7 @@ import "./ManifestView.css";
 export default function ManifestView({
   grid = Array(10).fill(Array(12).fill({ name: "UNUSED", weight: "0" })),
 }) {
-  const [selectedCell, setSelectedCell] = useState(null); // State to track the clicked cell
+  const [selectedCell, setSelectedCell] = useState(null);
 
   const handleCellClick = (row, col) => {
     setSelectedCell({ row, col });
@@ -30,7 +30,7 @@ export default function ManifestView({
               color: "black",
             }}
             onClick={() => handleCellClick(rowIndex, colIndex)}
-            title={cell.name} // Add a tooltip for container cells
+            title={cell.name}
           >
             {cell.name !== "UNUSED" && cell.name !== "NAN"
               ? cell.name.substring(0, 3)
