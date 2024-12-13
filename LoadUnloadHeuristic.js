@@ -91,7 +91,7 @@ class PriorityQueueNameCost {
     }
 }
 
-function LoadUnloadHeuristic (containersIn, containersOutMap, grid) {
+export default function LoadUnloadHeuristic (containersIn, containersOutMap, grid) {
     let numContOutMap = new Map(containersOutMap);
     let cost  = 0;
     let currContainerName = "";
@@ -150,7 +150,7 @@ function LoadUnloadHeuristic (containersIn, containersOutMap, grid) {
             if (numContOutMap.get(currContainerName) > 0) { // is there still containers of that name needed to be taken out
                 cost += minHeap.remove().cost;
                 numContOutMap.set(currContainerName, numContOutMap.get(currContainerName) - 1);
-                containersRemoved++;
+                containersRemoved++;``
             }
             else {
                 minHeap.remove();

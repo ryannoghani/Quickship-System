@@ -1,5 +1,5 @@
 export default class LoadUnloadShipState {
-  constructor(_grid, _craneX, _craneY, _parent, _gCost, _hCost, _operation, _unloadMap, _loadList, _key) {
+  constructor(_grid, _craneX, _craneY, _parent, _gCost, _hCost, _operation, _unloadMap, _loadList, _key, _bufferCol) {
     this.width = _grid[0].length;
     this.height = _grid.length;
     this.grid = _grid;
@@ -13,6 +13,7 @@ export default class LoadUnloadShipState {
     this.unloadMap = _unloadMap;
     this.loadList = _loadList;
     this.key = _key;
+    this.bufferCol = _bufferCol;
     this.FindTopContainers();
   }
   FindTopContainers() {

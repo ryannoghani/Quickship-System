@@ -1,34 +1,43 @@
 import LoadUnloadShipState from "./LoadUnloadShipState.js";
-import heuristic from "./LoadUnloadHeuristic.js";
+import LoadUnloadHeuristic from "./LoadUnloadHeuristic.js";
+import Container from "./Container.js";
 
 export default class LoadUnloadOperation {
   constructor(grid, _loadList, _unloadList) {
     let unloadMap = new Map(); //maps how many containers of a specific name to take out
     for (let i = 0; i < _unloadList.length; i++) {
-      if (unloadMap.has(_unloadList[i])) { //if already in map, increment
-        unloadMap.set(_unloadList[i], unloadMap.get(_unloadList[i]) + 1);
+      if (unloadMap.has(_unloadList[i].name)) { //if already in map, increment
+        unloadMap.set(_unloadList[i].name, unloadMap.get(_unloadList[i].name) + 1);
       }
       else { //new map item
-        unloadMap.set(_unloadList[i], 1);
+        unloadMap.set(_unloadList[i].name, 1);
+      }
+    }
+    let key = "";
+    for(let k = 0; k < grid.length; k++) {
+      for(let l = 0; l < grid[k].length; l++) {
+        key += grid[k][l].name;
       }
     }
     this.startState = new LoadUnloadShipState(
       grid,
-      0,
+      27,
       1,
       null,
       0,
-      this.LoadUnloadHeuristic(),
+      LoadUnloadHeuristic(_loadList, unloadMap, grid),
       "",
       unloadMap,
       _loadList,
-      key
+      key,
+      23
     );
     this.frontier = new PriorityQueue();
     this.visitedStates = new Set();
     this.operationList = [];
     this.gridList = [];
     this.goalState = undefined;
+    this.replacementContainer = new Container();
   }
   // Create an array for the list of operations and the list of grids
   CreateLists(goalState) {
@@ -36,8 +45,8 @@ export default class LoadUnloadOperation {
     if(currState == this.startState) {
       this.operationList.unshift("The ship has already been loaded/unloaded.");
     }
-    if(goalState.craneX != 0 && goalState.craneY != 1) {
-      this.operationList.unshift("Move crane back to starting location at (1, 9)");
+    if(!(goalState.craneX == 27 && goalState.craneY == 1)) {
+      this.operationList.unshift("Move crane back to starting location at (9, 1)");
     }
     while(currState.parent != null) {
       this.operationList.unshift(currState.operation);
@@ -121,17 +130,129 @@ export default class LoadUnloadOperation {
     cost++;
     return cost;
   }
-  // Load/unload heuristic function to guess the cost from a goal state
-  LoadUnloadHeuristic(inList, outList, state) {
-    return heuristic(inList, outList, grid);
-  }
   // Operation function that expands the given load/unload state
   ExpandLoadUnloadState(state) {
     this.visitedStates.add(state.key);
-    for(let i = 0; i < state.width; i++) {
+    // Moving a container that is in the ship
+    for(let i = 27; i < 39; i++) {
       let originalY = state.topContainer[i];
       if(!(i === state.craneX && originalY === state.craneY) && originalY < 10 && state.grid[originalY][i].name !== "NAN") {
-        for(let j = 0; j < state.width; j++) {
+        // Unload container from ship
+        if(state.unloadMap.has(state.grid[originalY][i].name)) {
+          let newGrid = [];
+          for(let k = 0; k < state.height; k++) {
+            newGrid[k] = [];
+            for(let l = 0; l < state.width; l++) {
+              newGrid[k][l] = state.grid[k][l];
+            }
+          }
+          newGrid[originalY][i] = this.replacementContainer;
+          let key = "";
+          for(let k = 0; k < newGrid.length; k++) {
+            for(let l = 0; l < newGrid[k].length; l++) {
+              key += newGrid[k][l].name;
+            }
+          }
+          if(!this.visitedStates.has(key)) {
+            let currCost = this.CalculateCost(
+              state.craneX,
+              state.craneY,
+              i,
+              25,
+              state.topContainer
+            ) - 2;
+            let newMap = new Map(state.unloadMap);
+            let val = newMap.get(state.grid[originalY][i].name);
+            if(val <= 1) {
+              newMap.delete(state.grid[originalY][i].name);
+            }
+            else {
+              newMap.set(state.grid[originalY][i].name, val - 1);
+            }
+            let newState = new LoadUnloadShipState(
+              newGrid,
+              25,
+              1,
+              state,
+              state.gCost + currCost,
+              LoadUnloadHeuristic(state.loadList, newMap, newGrid),
+              "Move crane to " +
+              "(" +
+              (10 - originalY) +
+              ", " +
+              (i - 26) +
+              ") and unload container (Estimate " +
+              currCost +
+              " minutes)",
+              newMap,
+              state.loadList,
+              key,
+              state.bufferCol
+            );
+            this.frontier.add(newState);
+          }
+        }
+        else {
+          // Move container from ship to buffer
+          let j = state.bufferCol;
+          let finalY = state.topContainer[j] - 1;
+          let newGrid = [];
+          for(let k = 0; k < state.height; k++) {
+            newGrid[k] = [];
+            for(let l = 0; l < state.width; l++) {
+              newGrid[k][l] = state.grid[k][l];
+            }
+          }
+          let temp = newGrid[finalY][j];
+          newGrid[finalY][j] = newGrid[originalY][i];
+          newGrid[originalY][i] = temp;
+          let key = "";
+          for(let k = 0; k < newGrid.length; k++) {
+            for(let l = 0; l < newGrid[k].length; l++) {
+              key += newGrid[k][l].name;
+            }
+          }
+          if(!this.visitedStates.has(key)) {
+            let bufferVal = j;
+            if(finalY <= 2) {
+              bufferVal--;
+            }
+            let currCost = this.CalculateCost(
+              state.craneX,
+              state.craneY,
+              i,
+              j,
+              state.topContainer
+            );
+            let newState = new LoadUnloadShipState(
+              newGrid,
+              j,
+              finalY,
+              state,
+              state.gCost + currCost,
+              LoadUnloadHeuristic(state.loadList, state.unloadMap, newGrid),
+              "Move crane to " +
+              "(" +
+              (10 - originalY) +
+              ", " +
+              (i - 26) +
+              ") and move container to (" +
+              (6 - finalY) +
+              ", " +
+              (j + 1) +
+              ") in the buffer (Estimate " +
+              currCost +
+              " minutes)",
+              state.unloadMap,
+              state.loadList,
+              key,
+              bufferVal
+            );
+            this.frontier.add(newState);
+          }
+        }
+        // Move container within ship
+        for(let j = 27; j < 39; j++) {
           let finalY = state.topContainer[j] - 1;
           if(j !== i && finalY >= 0) {
             let newGrid = [];
@@ -145,9 +266,9 @@ export default class LoadUnloadOperation {
             newGrid[finalY][j] = newGrid[originalY][i];
             newGrid[originalY][i] = temp;
             let key = "";
-            for(let k = 0; k < state.grid.length; k++) {
-              for(let l = 0; l < state.grid[k].length; l++) {
-                key += state.grid[k][l].name;
+            for(let k = 0; k < newGrid.length; k++) {
+              for(let l = 0; l < newGrid[k].length; l++) {
+                key += newGrid[k][l].name;
               }
             }
             if(!this.visitedStates.has(key)) {
@@ -164,25 +285,145 @@ export default class LoadUnloadOperation {
                 finalY,
                 state,
                 state.gCost + currCost,
-                this.LoadUnloadHeuristic(
-                  
-                ),
+                LoadUnloadHeuristic(state.loadList, state.unloadMap, newGrid),
                 "Move crane to " +
                 "(" +
                 (10 - originalY) +
                 ", " +
-                (i + 1) +
+                (i - 26) +
                 ") and move container to (" +
                 (10 - finalY) +
                 ", " +
-                (j + 1) +
-                ") (Estimate  " +
+                (j - 26) +
+                ") (Estimate " +
                 currCost +
                 " minutes)",
-                key
+                state.unloadMap,
+                state.loadList,
+                key,
+                state.bufferCol
               );
               this.frontier.add(newState);
             }
+          }
+        }
+      }
+    }
+    // Load container onto ship
+    if(state.loadList.length > 0) {
+      let newLoadList = [...state.loadList];
+      let loadContainer = newLoadList.pop();
+      for(let j = 27; j < 39; j++) {
+        let finalY = state.topContainer[j] - 1;
+        if(finalY >= 0) {
+          let newGrid = [];
+          for(let k = 0; k < state.height; k++) {
+            newGrid[k] = [];
+            for(let l = 0; l < state.width; l++) {
+              newGrid[k][l] = state.grid[k][l];
+            }
+          }
+          newGrid[finalY][j] = loadContainer;
+          let key = "";
+          for(let k = 0; k < newGrid.length; k++) {
+            for(let l = 0; l < newGrid[k].length; l++) {
+              key += newGrid[k][l].name;
+            }
+          }
+          if(!this.visitedStates.has(key)) {
+            let currCost = this.CalculateCost(
+              state.craneX,
+              state.craneY,
+              25,
+              j,
+              state.topContainer
+            ) - 2;
+            let newState = new LoadUnloadShipState(
+              newGrid,
+              j,
+              finalY,
+              state,
+              state.gCost + currCost,
+              LoadUnloadHeuristic(newLoadList, state.unloadMap, newGrid),
+              "Move crane to truck with container \"" +
+              loadContainer.name +
+              "\" and move container to (" +
+              (10 - finalY) +
+              ", " +
+              (j - 26) +
+              ") in the ship (Estimate " +
+              currCost +
+              " minutes)",
+              state.unloadMap,
+              newLoadList,
+              key,
+              state.bufferCol
+            );
+            this.frontier.add(newState);
+          }
+        }
+      }
+    }
+    // Move container from buffer to ship
+    let i = state.bufferCol;
+    let originalY = state.topContainer[i];
+    if(!(i == 23 && originalY == 6)) {
+      for(let j = 27; j < 39; j++) {
+        let finalY = state.topContainer[j] - 1;
+        if(finalY >= 0) {
+          let newGrid = [];
+          for(let k = 0; k < state.height; k++) {
+            newGrid[k] = [];
+            for(let l = 0; l < state.width; l++) {
+              newGrid[k][l] = state.grid[k][l];
+            }
+          }
+          let temp = newGrid[finalY][j];
+          newGrid[finalY][j] = newGrid[originalY][i];
+          newGrid[originalY][i] = temp;
+          let key = "";
+          for(let k = 0; k < newGrid.length; k++) {
+            for(let l = 0; l < newGrid[k].length; l++) {
+              key += newGrid[k][l].name;
+            }
+          }
+          if(!this.visitedStates.has(key)) {
+            let bufferVal = j;
+            if(originalY >= 5) {
+              bufferVal++;
+            }
+            let currCost = this.CalculateCost(
+              state.craneX,
+              state.craneY,
+              i,
+              j,
+              state.topContainer
+            );
+            let newState = new LoadUnloadShipState(
+              newGrid,
+              j,
+              finalY,
+              state,
+              state.gCost + currCost,
+              LoadUnloadHeuristic(state.loadList, state.unloadMap, newGrid),
+              "Move crane to " +
+              "(" +
+              (6 - originalY) +
+              ", " +
+              (i + 1) +
+              ") in the buffer and move container to (" +
+              (10 - finalY) +
+              ", " +
+              (j - 26) +
+              ") in the ship (Estimate " +
+              currCost +
+              " minutes)",
+              state.unloadMap,
+              state.loadList,
+              key,
+              bufferVal
+            );
+            this.frontier.add(newState);
           }
         }
       }
