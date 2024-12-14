@@ -375,9 +375,7 @@ export default class LoadUnloadOperation {
               state,
               state.gCost + currCost,
               LoadUnloadHeuristic(newLoadList, state.unloadMap, newGrid),
-              "Move crane to truck with container \"" +
-              loadContainer.name +
-              "\" and move container to (" +
+              "Move crane to a truck and move container to (" +
               (10 - finalY) +
               ", " +
               (j - 26) +
