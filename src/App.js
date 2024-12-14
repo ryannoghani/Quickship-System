@@ -43,6 +43,7 @@ function App() {
     setSteps([]);
     setStepIndex(0);
     setCompletedSteps(new Set());
+    setSelectedCells([]);
     const fileReader = new FileReader();
     setManifestFile(event.target.files[0]);
     fileReader.readAsText(event.target.files[0], "UTF-8");

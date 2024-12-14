@@ -1,4 +1,4 @@
-import { React, useState } from "react";
+import { React, useState, useEffect } from "react";
 
 export default function GridCell({
   rowIndex,
@@ -8,6 +8,12 @@ export default function GridCell({
   onClick,
 }) {
   const [isHighlight, setHighlight] = useState(false);
+
+  useEffect(() => {
+    if (stepIndex > 0) {
+      setHighlight(false);
+    }
+  }, [stepIndex]);
 
   const getBackgroundColor = (name) => {
     if (name === "NAN") return "darkgray";
