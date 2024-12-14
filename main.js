@@ -6,33 +6,6 @@ import fs from "fs";
 let testManifestGridTranslator = new ManifestGridTranslator();
 const manifestString = fs.readFileSync("Manifests/SilverQueen.txt", "utf8");
 let grid = testManifestGridTranslator.ConvertManifestToGrid(manifestString);
-let buffer_ship_grid = [];
-for (let i = 0; i < 10; ++i) {
-    buffer_ship_grid[i] = [];
-    for (let j = 0; j < 39; ++j) {
-        buffer_ship_grid[i][j] = new Container();
-    }
-}
-for (let i = 0; i < 10; ++i) {
-    for (let j = 0; j < 12; ++j) {
-        buffer_ship_grid[i][j+27] = grid[i][j];
-    }
-}
-for (let i = 6; i < 10; ++i) {
-    for (let j = 0; j < 24; ++j) {
-        buffer_ship_grid[i][j].name = 'NAN';
-        buffer_ship_grid[i][j].weight = 0;
-    }
-}
-for (let j = 0; j < 27; ++j) {
-    buffer_ship_grid[0][j].weight = 0;
-}
-for (let i = 2; i < 10; ++i) {
-    for (let j = 24; j < 27; ++j) {
-        buffer_ship_grid[i][j].name = 'NAN';
-        buffer_ship_grid[i][j].weight = 0;
-    }
-}
 
 let cat = new Container();
 cat.name = 'Cat';
@@ -58,7 +31,7 @@ let catfish = new Container();
 catfish.name = 'Catfish';
 let loadList = [natron];
 let unloadList = [batons, catfish];
-let testLoadUnloadOperation = new LoadUnloadOperation(buffer_ship_grid, loadList, unloadList);
+let testLoadUnloadOperation = new LoadUnloadOperation(grid, loadList, unloadList);
 testLoadUnloadOperation.LoadUnloadOperationSearch();
 if(testLoadUnloadOperation.goalState != null) {
     // console.log(testLoadUnloadOperation.shipGridList);
