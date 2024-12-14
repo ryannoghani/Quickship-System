@@ -1,4 +1,4 @@
-export default class BalanceShipState {
+export default class LoadUnloadShipState {
   constructor(
     _grid,
     _craneX,
@@ -7,10 +7,14 @@ export default class BalanceShipState {
     _gCost,
     _hCost,
     _operation,
-    _key
+    _unloadMap,
+    _loadList,
+    _key,
+    _bufferCol,
+    _loadContainer = null
   ) {
-    this.width = _grid[0].length; // 12
-    this.height = _grid.length; // 10
+    this.width = _grid[0].length;
+    this.height = _grid.length;
     this.grid = _grid;
     this.topContainer = [];
     this.craneX = _craneX;
@@ -19,7 +23,11 @@ export default class BalanceShipState {
     this.gCost = _gCost;
     this.hCost = _hCost;
     this.operation = _operation;
+    this.unloadMap = _unloadMap;
+    this.loadList = _loadList;
     this.key = _key;
+    this.bufferCol = _bufferCol;
+    this.loadContainer = _loadContainer;
     this.FindTopContainers();
   }
   FindTopContainers() {

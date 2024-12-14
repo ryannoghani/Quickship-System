@@ -7,6 +7,7 @@ import GridCell from "./GridCell";
 export default function ManifestView({
   grid = Array(10).fill(Array(12).fill({ name: "UNUSED", weight: "0" })),
   onCellClick,
+  stepIndex,
 }) {
   // const [selectedCell, setSelectedCell] = useState(null); // State to track the clicked cell
 
@@ -22,6 +23,7 @@ export default function ManifestView({
           <GridCell
             rowIndex={rowIndex}
             colIndex={colIndex}
+            stepIndex={stepIndex}
             cell={cell}
             onClick={onCellClick}
           />

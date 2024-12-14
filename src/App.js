@@ -9,6 +9,8 @@ import LogPanel from "./components/LogPanel.js";
 import StepControlBar from "./components/StepControlBar.js";
 import BalanceOperation from "./functions/BalanceOperation.js";
 import ManifestGridTranslator from "./functions/ManifestGridTranslator.js";
+import LoadUnloadOperation from "./functions/LoadUnloadOperation.js";
+import Container from "./functions/Container.js";
 
 function App() {
   const fileInputRef = useRef(null);
@@ -133,8 +135,25 @@ function App() {
     }
     if (mode === "loadUnload") {
       //names of cells to unload
-      const names = selectedCells.values();
-      const unloadContainers = names.map((name) => ({ name }));
+      const names = Array.from(selectedCells.values());
+      const unloadList = names.map((name) => ({ name }));
+      const numLoad = prompt("Enter the number of containers to load");
+      let loadList = [];
+
+      for (let i = 0; i < numLoad; i++) {
+        const container = new Container();
+        container.name = "%SETNAME%";
+        loadList.push(container);
+      }
+      const loadUnloadOp = new LoadUnloadOperation(
+        grids[0],
+        loadList,
+        unloadList
+      );
+      loadUnloadOp.LoadUnloadOperationSearch();
+
+      setSteps(loadUnloadOp.operationList);
+      setGrids(loadUnloadOp.shipGridList);
     }
   };
 
@@ -216,6 +235,7 @@ function App() {
             <ManifestView
               grid={grids?.[stepIndex]}
               onCellClick={handleCellClick}
+              stepIndex={stepIndex}
             />
           </div>
         </div>

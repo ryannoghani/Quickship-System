@@ -1,6 +1,12 @@
 import { React, useState } from "react";
 
-export default function GridCell({ rowIndex, colIndex, cell, onClick }) {
+export default function GridCell({
+  rowIndex,
+  colIndex,
+  stepIndex,
+  cell,
+  onClick,
+}) {
   const [isHighlight, setHighlight] = useState(false);
 
   const getBackgroundColor = (name) => {
@@ -9,7 +15,7 @@ export default function GridCell({ rowIndex, colIndex, cell, onClick }) {
     return "skyblue";
   };
 
-  if (cell.name === "SETNAME") {
+  if (cell.name === "%SETNAME%") {
     cell.name = prompt("Enter a name");
     cell.weight = prompt("Enter a weight in kg");
   }
@@ -19,7 +25,10 @@ export default function GridCell({ rowIndex, colIndex, cell, onClick }) {
       key={`${rowIndex}-${colIndex}`}
       className={`GridCell ${cell.name}`}
       style={{
-        backgroundColor: isHighlight ? "yellow" : getBackgroundColor(cell.name),
+        backgroundColor:
+          isHighlight && stepIndex === 0
+            ? "yellow"
+            : getBackgroundColor(cell.name),
         color: "black",
       }}
       onClick={() => {
