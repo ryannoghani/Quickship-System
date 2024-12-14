@@ -36,6 +36,9 @@ export default class LoadUnloadOperation {
     this.visitedStates = new Set();
     this.operationList = [];
     this.gridList = [];
+    this.shipGridList = [];
+    this.bufferGridList = [];
+    this.containerList = [];
     this.goalState = undefined;
     this.replacementContainer = new Container();
   }
@@ -44,15 +47,39 @@ export default class LoadUnloadOperation {
     let currState = goalState;
     if(currState == this.startState) {
       this.operationList.unshift("The ship has already been loaded/unloaded.");
+      this.containerList.unshift(null);
     }
     if(!(goalState.craneX == 27 && goalState.craneY == 1)) {
       this.operationList.unshift("Move crane back to starting location at (9, 1)");
+      this.containerList.unshift(null);
     }
-    while(currState.parent != null) {
-      this.operationList.unshift(currState.operation);
-      this.gridList.unshift(currState.grid);
+    while(currState != null) {
+      if(currState.operation != "") {
+        this.operationList.unshift(currState.operation);
+        this.containerList.unshift(currState.loadContainer);
+      }
+      this.SplitGrid(currState);
       currState = currState.parent;
     }
+  }
+  // Split big grid with both ship and buffer into separate grids
+  SplitGrid(state) {
+    let bufferGrid = [];
+    for (let i = 2; i < 6; i++) {
+      bufferGrid[i - 2] = [];
+      for (let j = 0; j < 24; j++) {
+        bufferGrid[i - 2][j] = state.grid[i][j];
+      }
+    }
+    this.bufferGridList.unshift(bufferGrid);
+    let shipGrid = [];
+    for (let i = 0; i < 10; i++) {
+      shipGrid[i] = [];
+      for (let j = 0; j < 12; j++) {
+        shipGrid[i][j] = state.grid[i][j];
+      }
+    }
+    this.shipGridList.unshift(shipGrid);
   }
   // Calculate total cost of an operation
   CalculateCost(craneX, craneY, boxStartCol, boxEndCol, topContainers) {
@@ -146,6 +173,7 @@ export default class LoadUnloadOperation {
               newGrid[k][l] = state.grid[k][l];
             }
           }
+          let unloadContainer = newGrid[originalY][i];
           newGrid[originalY][i] = this.replacementContainer;
           let key = "";
           for(let k = 0; k < newGrid.length; k++) {
@@ -181,7 +209,9 @@ export default class LoadUnloadOperation {
               (10 - originalY) +
               ", " +
               (i - 26) +
-              ") in the ship and unload container (Estimate " +
+              ") in the ship with a weight of " +
+              unloadContainer.weight +
+              " and unload container (Estimate " +
               currCost +
               " minutes)",
               newMap,
@@ -357,7 +387,8 @@ export default class LoadUnloadOperation {
               state.unloadMap,
               newLoadList,
               key,
-              state.bufferCol
+              state.bufferCol,
+              loadContainer
             );
             this.frontier.add(newState);
           }
@@ -441,23 +472,6 @@ export default class LoadUnloadOperation {
         break;
       }
       this.ExpandLoadUnloadState(currState);
-    }
-  }
-  SplitGrid(grid) {
-    // copy over buffer
-    for (let i = 2; i < 6; i++) {
-      this.bufferGridList[i - 2] = [];
-      for (let j = 0; j < 24; j++) {
-        this.bufferGridList[i - 2][j] = grid[i][j];
-      }
-    }
-
-    // copy over ship
-    for (let i = 0; i < 10; i++) {
-      this.shipGridList[i] = [];
-      for (let j = 0; j < 12; j++) {
-        this.bufferGridList[i][j] = grid[i][j];
-      }
     }
   }
 }
