@@ -59,6 +59,10 @@ function App() {
   };
 
   const handleSaveManifest = () => {
+    if (grids.length === 0) {
+      alert("Cannot complete save because no file is loaded.");
+      return;
+    }
     setIsActive(false);
 
     const saveFile = async (content) => {
