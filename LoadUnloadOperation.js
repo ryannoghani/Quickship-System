@@ -67,7 +67,6 @@ export default class LoadUnloadOperation {
     this.frontier = new PriorityQueue();
     this.visitedStates = new Set();
     this.operationList = [];
-    this.gridList = [];
     this.shipGridList = [];
     this.bufferGridList = [];
     this.containerList = [];
