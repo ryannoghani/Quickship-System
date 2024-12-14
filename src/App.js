@@ -23,6 +23,7 @@ function App() {
   const [grids, setGrids] = useState([]); // Array of manifests to display in a session
   const [stepIndex, setStepIndex] = useState(0); // Tracks current step that is displayed
   const [completedSteps, setCompletedSteps] = useState(new Set()); // Tracks completed steps
+  const [selectedCells, setSelectedCells] = useState([]);
 
   const triggerFileInput = () => {
     fileInputRef.current.click();
@@ -131,24 +132,24 @@ function App() {
       setSteps(balanceOp.operationList);
     }
     if (mode === "loadUnload") {
+      //names of cells to unload
+      const names = selectedCells.values();
+      const unloadContainers = names.map((name) => ({ name }));
     }
   };
 
-  const handleOnLoad = (row, col) => {
-    const newName = prompt("Enter a new container name");
-    const newWeight = prompt("Enter a new weight");
-    let newGrids = grids.slice(0, stepIndex);
-    let modifiedGrid = grids[stepIndex];
-    modifiedGrid[row][col].name = newName;
-    modifiedGrid[row][col].weight = newWeight;
+  const handleCellClick = (name, boolAdd) => {
+    if (boolAdd) {
+      setSelectedCells((prevCells) => [...prevCells, name]);
+    } else {
+      const index = selectedCells.indexOf(name);
 
-    newGrids.push(modifiedGrid);
-
-    //Call the load/unload algorithm again
-    let balanceOp = new BalanceOperation(modifiedGrid);
-    balanceOp.BalanceOperationSearch();
-    newGrids.pop();
-    setGrids(newGrids.push(...balanceOp.gridList));
+      if (index !== -1) {
+        const copy = [...selectedCells];
+        copy.splice(index, 1);
+        setSelectedCells(copy);
+      }
+    }
   };
 
   return (
@@ -212,7 +213,10 @@ function App() {
           />
           <div className="MainView">
             <LogPanel />
-            <ManifestView grid={grids?.[stepIndex]} onLoad={handleOnLoad} />
+            <ManifestView
+              grid={grids?.[stepIndex]}
+              onCellClick={handleCellClick}
+            />
           </div>
         </div>
       </div>
