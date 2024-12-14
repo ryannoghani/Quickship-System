@@ -61,6 +61,8 @@ let unloadList = [batons, catfish];
 let testLoadUnloadOperation = new LoadUnloadOperation(buffer_ship_grid, loadList, unloadList);
 testLoadUnloadOperation.LoadUnloadOperationSearch();
 if(testLoadUnloadOperation.goalState != null) {
+    // console.log(testLoadUnloadOperation.shipGridList);
+    // console.log(testLoadUnloadOperation.containerList);
     console.log(testLoadUnloadOperation.operationList);
     console.log("Estimated total cost: " + testLoadUnloadOperation.goalState.gCost);
 }
@@ -74,29 +76,29 @@ else {
 */
 
 /* ShipCase2: 9 minutes
-    'Move crane to truck with container "Bat" and move container to (4, 1) in the ship (Estimate 9 minutes)'
+    'Move crane to truck and move container to (4, 1) in the ship (Estimate 9 minutes)'
     'Move crane back to starting location at (9, 1)'
 */
 
 /* ShipCase3: 37 minutes
-    'Move crane to truck with container "Rat" and move container to (3, 1) in the ship (Estimate 10 minutes)'
+    'Move crane to truck and move container to (3, 1) in the ship (Estimate 10 minutes)'
     'Move crane to (2, 2) in the ship and move container to (2, 3) in the ship (Estimate 5 minutes)'
     'Move crane to (1, 2) in the ship and unload container (Estimate 15 minutes)'
-    'Move crane to truck with container "Bat" and move container to (4, 1) in the ship (Estimate 7 minutes)'
+    'Move crane to truck and move container to (4, 1) in the ship (Estimate 7 minutes)'
     'Move crane back to starting location at (9, 1)'
 */
 
 /* ShipCase4: 36 minutes
     'Move crane to (8, 5) in the ship and move container to (2, 6) in the ship (Estimate 12 minutes)'
     'Move crane to (7, 5) in the ship and unload container (Estimate 16 minutes)'
-    'Move crane to truck with container "Nat" and move container to (3, 1) in the ship (Estimate 8 minutes)'
+    'Move crane to truck and move container to (3, 1) in the ship (Estimate 8 minutes)'
     'Move crane back to starting location at (9, 1)'
 */
 
 /* ShipCase5: 60 minutes
-    'Move crane to truck with container "Rat" and move container to (2, 1) in the ship (Estimate 11 minutes)'
+    'Move crane to truck and move container to (2, 1) in the ship (Estimate 11 minutes)'
     'Move crane to (1, 5) in the ship and unload container (Estimate 21 minutes)'
-    'Move crane to truck with container "Nat" and move container to (2, 3) in the ship (Estimate 11 minutes)'
+    'Move crane to truck and move container to (2, 3) in the ship (Estimate 11 minutes)'
     'Move crane to (1, 4) in the ship and unload container (Estimate 17 minutes)'
     'Move crane back to starting location at (9, 1)'
 */
@@ -104,7 +106,7 @@ else {
 /* SilverQueen: 50 minutes
     'Move crane to (2, 2) in the ship and move container to (2, 3) in the ship (Estimate 9 minutes)',
     'Move crane to (1, 4) in the ship and unload container (Estimate 17 minutes)',
-    'Move crane to truck with container "Natron" and move container to (2, 1) in the ship (Estimate 9 minutes)',
+    'Move crane to truck and move container to (2, 1) in the ship (Estimate 9 minutes)',
     'Move crane to (1, 2) in the ship and unload container (Estimate 15 minutes)',
     'Move crane back to starting location at (9, 1)'
 */
