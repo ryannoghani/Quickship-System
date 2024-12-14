@@ -107,7 +107,7 @@ export default class LoadUnloadOperation {
     for (let i = 0; i < 10; i++) {
       shipGrid[i] = [];
       for (let j = 0; j < 12; j++) {
-        shipGrid[i][j] = state.grid[i][j];
+        shipGrid[i][j] = state.grid[i][j + 27];
       }
     }
     this.shipGridList.unshift(shipGrid);
