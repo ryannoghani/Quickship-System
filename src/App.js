@@ -11,12 +11,13 @@ import BalanceOperation from "./functions/BalanceOperation.js";
 import ManifestGridTranslator from "./functions/ManifestGridTranslator.js";
 import LoadUnloadOperation from "./functions/LoadUnloadOperation.js";
 import Container from "./functions/Container.js";
+import Clock from "./functions/Clock.js";
 
 function App() {
   const fileInputRef = useRef(null);
   const [isActive, setIsActive] = useState(false); // True when file is loaded
   const [manifestFile, setManifestFile] = useState(null);
-  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const [currentDateTime, setCurrentDateTime] = useState(new Clock());
   const [mode, setMode] = useState("loadUnload"); //Used to dynamically change behavior of Start button between balance and load/unload
   const [userName, setUserName] = useState("");
   const [currentUser, setCurrentUser] = useState("");
@@ -90,7 +91,7 @@ function App() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentDateTime(new Date());
+      setCurrentDateTime(new Clock());
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -180,8 +181,7 @@ function App() {
     <div className="App">
       <div className="TopBar">
         <div className="AppName">QuickShip</div>
-        <div className="Time">{currentDateTime.toLocaleTimeString()}</div>
-        <div className="Date">{currentDateTime.toLocaleDateString()}</div>
+        <div className="Time">{currentDateTime.GetTime()}</div>
       </div>
       <div className="Content">
         <div className="Sidebar">
