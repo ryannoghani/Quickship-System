@@ -12,6 +12,7 @@ import ManifestGridTranslator from "./functions/ManifestGridTranslator.js";
 import LoadUnloadOperation from "./functions/LoadUnloadOperation.js";
 import Container from "./functions/Container.js";
 import Clock from "./functions/Clock.js";
+import BufferView from "./components/BufferView.js";
 
 function App() {
   const fileInputRef = useRef(null);
@@ -26,6 +27,7 @@ function App() {
   const [stepIndex, setStepIndex] = useState(0); // Tracks current step that is displayed
   const [completedSteps, setCompletedSteps] = useState(new Set()); // Tracks completed steps
   const [selectedCells, setSelectedCells] = useState([]);
+  const [bufferGrids, setBufferGrids] = useState([]);
 
   const triggerFileInput = () => {
     fileInputRef.current.click();
@@ -149,6 +151,7 @@ function App() {
       let balanceOp = new BalanceOperation(grids[0]);
       balanceOp.BalanceOperationSearch();
       setGrids(balanceOp.gridList);
+      setBufferGrids(balanceOp.bufferGridList);
       setSteps(balanceOp.operationList);
     }
     if (mode === "loadUnload") {
@@ -172,6 +175,7 @@ function App() {
 
       setSteps(loadUnloadOp.operationList);
       setGrids(loadUnloadOp.shipGridList);
+      setBufferGrids(loadUnloadOp.bufferGridList);
     }
   };
 
@@ -289,6 +293,7 @@ function App() {
                 addLog('"' + containerName + '" is onloaded.')
               }
             />
+            <BufferView grid={bufferGrids?.[stepIndex]} />
           </div>
         </div>
       </div>
