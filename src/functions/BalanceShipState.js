@@ -7,7 +7,8 @@ export default class BalanceShipState {
     _gCost,
     _hCost,
     _operation,
-    _key
+    _key,
+    _isSIFTgoalState = false
   ) {
     this.width = _grid[0].length; // 12
     this.height = _grid.length; // 10
@@ -20,6 +21,7 @@ export default class BalanceShipState {
     this.hCost = _hCost;
     this.operation = _operation;
     this.key = _key;
+    this.isSIFTgoalState = _isSIFTgoalState;
     this.FindTopContainers();
   }
   FindTopContainers() {
