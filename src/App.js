@@ -103,7 +103,7 @@ function App() {
       const blob = new Blob([content], { type: "text/plain" });
       const a = document.createElement("a");
 
-      a.download = "KeoghPort" + currentDateTime.GetYear() + ".txt";
+      a.download = "KeoghsPort" + currentDateTime.GetYear() + ".txt";
       a.href = URL.createObjectURL(blob);
       a.addEventListener("click", (e) => {
         setTimeout(() => URL.revokeObjectURL(a.href), 30 * 1000);
