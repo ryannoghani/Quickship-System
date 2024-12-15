@@ -7,6 +7,7 @@ export default function GridCell({
   stepIndex,
   cell,
   onClick,
+  onLoad,
 }) {
   const [isHighlight, setHighlight] = useState(false);
 
@@ -31,6 +32,8 @@ export default function GridCell({
     while (cell.weight <= 0) {
       cell.weight = prompt("Enter a valid weight please");
     }
+
+    onLoad(cell.name);
   }
 
   return (
