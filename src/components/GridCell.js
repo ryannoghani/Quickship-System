@@ -29,7 +29,7 @@ export default function GridCell({
       cell.name = prompt("Enter a valid name please");
     }
     cell.weight = prompt("Enter a weight in kg");
-    while (cell.weight <= 0) {
+    while (cell.weight < 0 || cell.weight > 99999) {
       cell.weight = prompt("Enter a valid weight please");
     }
 
