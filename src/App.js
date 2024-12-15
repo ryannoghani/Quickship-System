@@ -7,85 +7,85 @@ import { GiSave } from "react-icons/gi";
 import ManifestView from "./components/ManifestView.js";
 import LogPanel from "./components/LogPanel.js";
 import StepControlBar from "./components/StepControlBar.js";
+import BalanceOperation from "./functions/BalanceOperation.js";
+import ManifestGridTranslator from "./functions/ManifestGridTranslator.js";
+import LoadUnloadOperation from "./functions/LoadUnloadOperation.js";
+import Container from "./functions/Container.js";
 
 function App() {
   const fileInputRef = useRef(null);
-  const [grids, setGrids] = useState([]);
+  const [isActive, setIsActive] = useState(false); // True when file is loaded
+  const [manifestFile, setManifestFile] = useState(null);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
-  const [mode, setMode] = useState("loadUnload"); // Default mode
+  const [mode, setMode] = useState("loadUnload"); //Used to dynamically change behavior of Start button between balance and load/unload
   const [userName, setUserName] = useState("");
   const [currentUser, setCurrentUser] = useState("");
   const [log, setLog] = useState([]);
-  const [steps, setSteps] = useState([
-    "Step 1: Move from Ship to Truck",
-    "Step 2: Move from Dock to Buffer",
-  ]); // Example steps
-  const [currentStep, setCurrentStep] = useState(0);
+  const [steps, setSteps] = useState([]); // Step descriptions generated in a session
+  const [grids, setGrids] = useState([]); // Array of manifests to display in a session
+  const [stepIndex, setStepIndex] = useState(0); // Tracks current step that is displayed
   const [completedSteps, setCompletedSteps] = useState(new Set()); // Tracks completed steps
+  const [selectedCells, setSelectedCells] = useState([]);
 
   const triggerFileInput = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    } else {
-      console.error("File input not available");
-    }
+    fileInputRef.current.click();
   };
-  useEffect(() => {
-    // This will log the ref to see if it is correctly assigned
-    console.log(fileInputRef.current);
-  }, []);
 
   const handleLoadManifest = (event) => {
+    if (
+      isActive === true &&
+      !window.confirm(
+        "A session is already active. Overwrite it and start a new one? Unsaved progress will be lost."
+      )
+    ) {
+      return;
+    }
+    setSteps([]);
+    setStepIndex(0);
+    setCompletedSteps(new Set());
+    setSelectedCells([]);
     const fileReader = new FileReader();
+    setManifestFile(event.target.files[0]);
     fileReader.readAsText(event.target.files[0], "UTF-8");
     fileReader.onload = (e) => {
       console.log("File Read Complete:", e.target.result); // Log raw file content
-      const lines = e.target.result.split("\n");
-      const newGridData = Array.from({ length: 10 }, () =>
-        Array.from({ length: 12 }, () => 0)
-      );
-
-      lines.forEach((line, index) => {
-        const parts = line.replace(/\[|\]|"/g, "").split(",");
-        console.log(`Line ${index}:`, parts); // Log each parsed line
-
-        if (parts.length < 3) {
-          console.error(`Skipping malformed line ${index}:`, line);
-          return; // Skip this iteration if not enough parts
-        }
-
-        const [row, col, weight, description] = parts;
-        if (!description) {
-          console.error(`Description missing in line ${index}:`, line);
-          return; // Skip if description is missing
-        }
-
-        const trimmedDescription = description.trim();
-        if (trimmedDescription === "NAN") {
-          newGridData[row - 1][col - 1] = {
-            type: "NAN",
-            content: "",
-            name: "NaN", // No name for NAN cells
-          };
-        } else if (trimmedDescription === "UNUSED") {
-          newGridData[row - 1][col - 1] = {
-            type: "UNUSED",
-            content: "",
-            name: "", // No name for UNUSED cells
-          };
-        } else {
-          newGridData[row - 1][col - 1] = {
-            type: "CONTAINER",
-            content: trimmedDescription.substring(0, 6), // Limit to 6 characters for display
-            name: trimmedDescription, // Save the full name of the container
-          };
-        }
-      });
-
-      const reverse = newGridData.reverse();
-      console.log("Updated Grid Data:", reverse); // Log the new grid data structure
-      setGrids([reverse]); // Update the state
+      const fileString = e.target.result;
+      const translator = new ManifestGridTranslator();
+      let grid = translator.ConvertManifestToGrid(fileString);
+      setGrids([grid]); // Update the state
     };
+
+    setIsActive(true);
+  };
+
+  const handleSaveManifest = () => {
+    if (grids.length === 0) {
+      alert("Cannot complete save because no file is loaded.");
+      return;
+    }
+    setIsActive(false);
+
+    const saveFile = async (content) => {
+      const blob = new Blob([content], { type: "text/plain" });
+      const a = document.createElement("a");
+
+      const fileExtension = manifestFile.name.slice(
+        manifestFile.name.lastIndexOf(".")
+      );
+      a.download =
+        manifestFile.name.replace(fileExtension, "") +
+        "OUTBOUND" +
+        fileExtension;
+      a.href = URL.createObjectURL(blob);
+      a.addEventListener("click", (e) => {
+        setTimeout(() => URL.revokeObjectURL(a.href), 30 * 1000);
+      });
+      a.click();
+    };
+
+    let translator = new ManifestGridTranslator();
+    let content = translator.ConvertGridToManifest(grids[stepIndex]);
+    saveFile(content);
   };
 
   useEffect(() => {
@@ -115,26 +115,64 @@ function App() {
   };
 
   const handleNextStep = () => {
-    if (currentStep < grids.length - 1) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const handlePrevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+    if (stepIndex < grids.length - 1) {
+      setStepIndex(stepIndex + 1);
     }
   };
 
   const handleDoneStep = () => {
-    if (completedSteps.has(currentStep)) {
-      // If the step is already marked as completed, create a new Set without this step
-      setCompletedSteps(
-        new Set([...completedSteps].filter((step) => step !== currentStep))
+    alert("Don't forget to save and email the manifest.");
+    setIsActive(false);
+  };
+
+  const handlePrevStep = () => {
+    if (stepIndex > 0) {
+      setStepIndex(stepIndex - 1);
+    }
+  };
+
+  const handleStart = () => {
+    if (mode === "balance") {
+      let balanceOp = new BalanceOperation(grids[0]);
+      balanceOp.BalanceOperationSearch();
+      setGrids([grids[0]].concat(balanceOp.gridList));
+      setSteps(balanceOp.operationList);
+    }
+    if (mode === "loadUnload") {
+      //names of cells to unload
+      const names = Array.from(selectedCells.values());
+      const unloadList = names.map((name) => ({ name }));
+      const numLoad = prompt("Enter the number of containers to load");
+      let loadList = [];
+
+      for (let i = 0; i < numLoad; i++) {
+        const container = new Container();
+        container.name = "%SETNAME%";
+        loadList.push(container);
+      }
+      const loadUnloadOp = new LoadUnloadOperation(
+        grids[0],
+        loadList,
+        unloadList
       );
+      loadUnloadOp.LoadUnloadOperationSearch();
+
+      setSteps(loadUnloadOp.operationList);
+      setGrids(loadUnloadOp.shipGridList);
+    }
+  };
+
+  const handleCellClick = (name, boolAdd) => {
+    if (boolAdd) {
+      setSelectedCells((prevCells) => [...prevCells, name]);
     } else {
-      // Otherwise, add this step to the Set of completed steps
-      setCompletedSteps(new Set(completedSteps.add(currentStep)));
+      const index = selectedCells.indexOf(name);
+
+      if (index !== -1) {
+        const copy = [...selectedCells];
+        copy.splice(index, 1);
+        setSelectedCells(copy);
+      }
     }
   };
 
@@ -159,10 +197,7 @@ function App() {
           >
             <MdBalance /> Balance
           </button>
-          <button
-            className="SquareButton"
-            onClick={() => console.log("Save Manifest")}
-          >
+          <button className="SquareButton" onClick={handleSaveManifest}>
             <GiSave /> Save Manifest
           </button>
           <button className="SquareButton" onClick={triggerFileInput}>
@@ -177,7 +212,13 @@ function App() {
         </div>
         <div className="MainContent">
           <div className="TopControlBar">
-            <button className="StartButton">Start</button>
+            <button
+              className="StartButton"
+              disabled={!isActive}
+              onClick={handleStart}
+            >
+              Start
+            </button>
             <input
               type="text"
               placeholder={currentUser || "Enter your name"} // Show current user as placeholder if available
@@ -187,14 +228,20 @@ function App() {
             <button onClick={handleLogin}>Log In</button>
           </div>
           <StepControlBar
-            stepDescription={steps[currentStep]}
-            onDone={handleDoneStep}
+            isActive={isActive}
+            index={stepIndex}
+            steps={steps}
             onPrev={handlePrevStep}
             onNext={handleNextStep}
+            onDone={handleDoneStep}
           />
           <div className="MainView">
             <LogPanel />
-            <ManifestView grid={grids?.[currentStep]} />
+            <ManifestView
+              grid={grids?.[stepIndex]}
+              onCellClick={handleCellClick}
+              stepIndex={stepIndex}
+            />
           </div>
         </div>
       </div>
