@@ -470,7 +470,7 @@ export default class BalanceOperationWithBuffer {
   // Create output message for an operation
   MoveContainerMessage(originalY, i, finalY, j, currCost) {
     let extraMessage = "";
-    let message = "Move the crane to ("; //We have to find out whether the container we are moving is on the ship or buffer
+    let message = "Move crane to ("; //We have to find out whether the container we are moving is on the ship or buffer
     let container_is_on_ship; //This flag variable is used later on for formatting purposes
     if (i <= 23) {
       //This means the container we are moving is on the buffer
@@ -494,15 +494,15 @@ export default class BalanceOperationWithBuffer {
       originalY +
       ", " +
       i +
-      ") on the " +
+      ") in the " +
       extraMessage +
-      "and move the container to ";
+      "and move container to ";
     extraMessage = "";
     //These two if statements are when we move from the ship to the buffer or vice versa. The message string is appended with more information to clarify where the coordinates belong.
-    if (container_is_on_ship && j <= 23) {
-      extraMessage += " on the buffer";
-    } else if (!container_is_on_ship && j >= 26) {
-      extraMessage += "on the ship";
+    if (j <= 23) {
+      extraMessage += " in the buffer";
+    } else if (j >= 26) {
+      extraMessage += " in the ship";
     }
     //We need to readjust the coordinates for the location we're moving the container
     if (j <= 23) {
@@ -520,7 +520,7 @@ export default class BalanceOperationWithBuffer {
       );
     }
     message += "(" + finalY + ", " + j + ")";
-    return message + extraMessage + " (Estimate: " + currCost + " minutes)";
+    return message + extraMessage + " (Estimate " + currCost + " minutes)";
   }
   // Operation function that expands the given SIFT state
   ExpandSIFTState(state) {
@@ -583,7 +583,6 @@ export default class BalanceOperationWithBuffer {
   }
   // Balance A* search with frontier and map for visited states
   BalanceOperationSearch() {
-    console.log("BUFFER VER");
     if (this.startState.hCost === Number.MAX_SAFE_INTEGER) {
       this.SIFTOperationSearch();
     } else {
