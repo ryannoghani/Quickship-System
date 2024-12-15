@@ -1,0 +1,36 @@
+.BufferView {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr); /* 24 equal columns */
+  grid-template-rows: repeat(4, 1fr); /* 4 equal rows */
+  gap: 2px;
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  width: var(--buffer-width, 30%);
+  height: var(--buffer-height, 100px);
+  overflow: hidden;
+  z-index: 10;
+}
+
+.GridCell {
+  background-color: #ddd;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.GridCell.NAN {
+  background-color: darkgray;
+}
+
+.GridCell.UNUSED {
+  background-color: lightgray;
+}
+
+.GridCell.CONTAINER {
+  background-color: skyblue;
+  color: black;
+}
