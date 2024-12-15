@@ -378,16 +378,16 @@ export default class BalanceOperation {
                   this.lowerBound,
                   this.upperBound
                 ),
-                "Move the crane to " +
+                "Move crane to " +
                   "(" +
                   (10 - originalY) +
                   ", " +
                   (i + 1) +
-                  ") on the ship and move the container to (" +
+                  ") in the ship and move container to (" +
                   (10 - finalY) +
                   ", " +
                   (j + 1) +
-                  ") (Estimate: " +
+                  ") in the ship (Estimate " +
                   currCost +
                   " minutes)",
                 key
@@ -448,11 +448,11 @@ export default class BalanceOperation {
                   (10 - originalY) +
                   ", " +
                   (i + 1) +
-                  ") on ship and move container to (" +
+                  ") in the ship and move container to (" +
                   (10 - finalY) +
                   ", " +
                   (j + 1) +
-                  ") (Estimate  " +
+                  ") in the ship (Estimate " +
                   currCost +
                   " minutes)",
                 key,
@@ -467,7 +467,7 @@ export default class BalanceOperation {
   }
   // Balance A* search with frontier and map for visited states
   BalanceOperationSearch() {
-    if (this.numberOfContainers >= 48) {
+    if (this.numberOfContainers <= 48) {
       //If the ship is half full or more we need to use operations that move containers to the buffer.
       let balanceJobWithBuffer = new BalanceOperationWithBuffer(
         this.originalGrid
