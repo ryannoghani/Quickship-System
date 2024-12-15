@@ -1,4 +1,5 @@
 import { React, useState, useEffect } from "react";
+import CheckContainerName from "../functions/ContainerNameChecker";
 
 export default function GridCell({
   rowIndex,
@@ -23,7 +24,13 @@ export default function GridCell({
 
   if (cell.name === "%SETNAME%") {
     cell.name = prompt("Enter a name");
+    while (!CheckContainerName(cell.name)) {
+      cell.name = prompt("Enter a valid name please");
+    }
     cell.weight = prompt("Enter a weight in kg");
+    while (cell.weight <= 0) {
+      cell.weight = prompt("Enter a valid weight please");
+    }
   }
 
   return (
