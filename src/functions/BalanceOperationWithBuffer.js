@@ -1,24 +1,54 @@
 import BalanceShipState from "./BalanceShipState.js";
 import CalculateTransferCost from "./CalculateTransferCost.js";
-import ManifestGridTranslator from "./ManifestGridTranslator.js";
-import BalanceOperationWithBuffer from "./BalanceOperationWithBuffer.js";
 import Container from "./Container.js";
 
-export default class BalanceOperation {
+export default class BalanceOperationWithBuffer {
   constructor(grid) {
     let average = this.CalculateAverage(grid);
     this.lowerBound = average * 0.9;
     this.upperBound = average * 1.1;
+    let buffer_ship_grid = []; //This will eventually become a 10 row, 39 column 2d array
+    for (let i = 0; i < 10; ++i) {
+      buffer_ship_grid[i] = [];
+      for (let j = 0; j < 39; ++j) {
+        buffer_ship_grid[i][j] = new Container(); //For now, every slot on the buffer_ship_grid is set to UNUSED, but we will change this in the upcoming lines
+      }
+    }
+    for (let i = 0; i < 10; ++i) {
+      //This is basically pasting over the grid onto the right half of buffer_ship_grid
+      for (let j = 0; j < 12; ++j) {
+        buffer_ship_grid[i][j + 27] = grid[i][j];
+      }
+    }
+    for (let i = 6; i < 10; ++i) {
+      //Technically, the buffer is only 5 rows, not 10. So for its lower 5 rows, we set each slot to NAN so that containers are never moved there during the search
+      for (let j = 0; j < 24; ++j) {
+        buffer_ship_grid[i][j].name = "NAN";
+        buffer_ship_grid[i][j].weight = 0; //It should never be the case that the weight isnt already 0, but I put this here just in case
+      }
+    }
+    for (let j = 0; j < 27; ++j) {
+      //For now, lets assume the operator can move containers to the same row as the left pink virtual cell. This means the whole row should be intialized to UNUSED, so future containers may move there
+      buffer_ship_grid[0][j].name = "UNUSED";
+      buffer_ship_grid[0][j].weight = 0;
+    }
+    for (let i = 2; i < 10; ++i) {
+      //The area below our bridge should never be accessed either. The bridge is at row index 1, by the way
+      for (let j = 24; j < 27; ++j) {
+        buffer_ship_grid[i][j].name = "NAN";
+        buffer_ship_grid[i][j].weight = 0;
+      }
+    }
     this.containerIDMap = new Map();
     this.startState = new BalanceShipState(
-      grid,
-      0,
+      buffer_ship_grid,
+      27,
       1,
       null,
       0,
-      this.BalanceHeuristic(grid, this.lowerBound, this.upperBound),
+      this.BalanceHeuristic(buffer_ship_grid, this.lowerBound, this.upperBound),
       "",
-      this.CreateKey(grid, 0, 1)
+      this.CreateKey(buffer_ship_grid, 27, 1)
     );
     this.frontier = new PriorityQueue();
     this.visitedStates = new Set();
@@ -27,30 +57,7 @@ export default class BalanceOperation {
     this.bufferGridList = [];
     this.goalState = undefined;
     this.balanceMode = true;
-    this.numberOfContainers = this.FindNumberOfContainers(grid);
-    this.originalGrid = grid; //This originalGrid is for potentially initializing the BalanceOperationWithBuffer class
-  }
-  //Find the total number of containers on the ship
-  FindNumberOfContainers(grid) {
-    let cnt = 0;
-    for (let i = 0; i < 10; ++i) {
-      for (let j = 0; j < 12; ++j) {
-        if (grid[i][j].name != "NAN" && grid[i][j].name != "UNUSED") {
-          cnt += 1;
-        }
-      }
-    }
-    return cnt;
-  }
-  // Calculate the average of the total weight
-  CalculateAverage(grid) {
-    let sum = 0.0;
-    for (let i = 0; i < grid.length; i++) {
-      for (let j = 0; j < grid[0].length; j++) {
-        sum += grid[i][j].weight;
-      }
-    }
-    return sum / 2;
+    this.startState.FindTopContainers();
   }
   // Create an array for the list of operations and the list of grids
   CreateLists(goalState) {
@@ -72,7 +79,7 @@ export default class BalanceOperation {
         );
       }
     }
-    if (!(goalState.craneX == 0 && goalState.craneY == 1)) {
+    if (!(goalState.craneX == 27 && goalState.craneY == 1)) {
       this.operationList.unshift(
         "Move crane back to starting location at (9, 1)"
       );
@@ -81,10 +88,38 @@ export default class BalanceOperation {
       if (currState.operation != "") {
         this.operationList.unshift(currState.operation);
       }
-      this.gridList.unshift(currState.grid);
-      this.bufferGridList.unshift(bufferGrid);
+      this.SplitGrid(currState);
       currState = currState.parent;
     }
+  }
+  // Split big grid with both ship and buffer into separate grids
+  SplitGrid(state) {
+    let bufferGrid = [];
+    for (let i = 2; i < 6; i++) {
+      bufferGrid[i - 2] = [];
+      for (let j = 0; j < 24; j++) {
+        bufferGrid[i - 2][j] = state.grid[i][j];
+      }
+    }
+    this.bufferGridList.unshift(bufferGrid);
+    let shipGrid = [];
+    for (let i = 0; i < 10; i++) {
+      shipGrid[i] = [];
+      for (let j = 0; j < 12; j++) {
+        shipGrid[i][j] = state.grid[i][j + 27];
+      }
+    }
+    this.gridList.unshift(shipGrid);
+  }
+  // Calculate the average of the total weight
+  CalculateAverage(grid) {
+    let sum = 0.0;
+    for (let i = 0; i < grid.length; i++) {
+      for (let j = 0; j < grid[0].length; j++) {
+        sum += grid[i][j].weight;
+      }
+    }
+    return sum / 2;
   }
   // Calculate total cost of an operation
   CalculateCost(craneX, craneY, boxStartCol, boxEndCol, topContainers) {
@@ -167,24 +202,33 @@ export default class BalanceOperation {
     let leftItemVect = [];
     let rightItemVect = [];
     let baseCost = 0;
+    for (let i = 2; i < 6; i++) {
+      for (let j = 0; j < 24; j++) {
+        if (grid[i][j].name !== "UNUSED" && grid[i][j].name !== "NAN") {
+          leftItemVect.push([grid[i][j].weight, 6]);
+          baseCost += 27 - j;
+          baseCost += i - 1;
+        }
+      }
+    }
     for (let i = 0; i < 2; i++) {
-      for (let j = 0; j < grid[0].length; j++) {
+      for (let j = 27; j < 39; j++) {
         if (grid[i][j].name !== "UNUSED" && grid[i][j].name !== "NAN") {
           baseCost += 2 - i;
         }
       }
     }
-    for (let i = 0; i < grid.length; i++) {
-      for (let j = 0; j < grid[0].length / 2; j++) {
+    for (let i = 0; i < 10; i++) {
+      for (let j = 27; j < 33; j++) {
         if (grid[i][j].name !== "UNUSED" && grid[i][j].name !== "NAN") {
-          leftItemVect.push([grid[i][j].weight, 6 - j]);
+          leftItemVect.push([grid[i][j].weight, 33 - j]);
         }
       }
     }
-    for (let i = 0; i < grid.length; i++) {
-      for (let j = grid[0].length / 2; j < grid[0].length; j++) {
+    for (let i = 0; i < 10; i++) {
+      for (let j = 33; j < 39; j++) {
         if (grid[i][j].name !== "UNUSED" && grid[i][j].name !== "NAN") {
-          rightItemVect.push([grid[i][j].weight, j - 5]);
+          rightItemVect.push([grid[i][j].weight, j - 32]);
         }
       }
     }
@@ -246,7 +290,7 @@ export default class BalanceOperation {
     let where_each_container_is = new Map(); //Maps container to its current row and column. This is so we don't have to constantly search for them in the grid
     for (let i = 9; i >= 0; --i) {
       //Loop adds containers to containers array and maps each container to its current location
-      for (let j = 0; j < 12; ++j) {
+      for (let j = 0; j < 39; ++j) {
         if (grid[i][j].name !== "NAN" && grid[i][j].name !== "UNUSED") {
           containers.push(grid[i][j]);
           where_each_container_is.set(grid[i][j], [i, j]);
@@ -275,18 +319,18 @@ export default class BalanceOperation {
       if (
         left_column < 0 ||
         right_column >= 12 ||
-        grid[row][left_column].name === "NAN" ||
-        grid[row][right_column].name === "NAN"
+        grid[row][left_column + 27].name === "NAN" ||
+        grid[row][right_column + 27].name === "NAN"
       ) {
         row--;
         left_column = 5;
         right_column = 6;
       }
-      sift_placements.push([row, left_column]);
+      sift_placements.push([row, left_column + 27]);
       left_column--;
       i++;
       if (i < containers.length) {
-        sift_placements.push([row, right_column]);
+        sift_placements.push([row, right_column + 27]);
         right_column++;
       }
     }
@@ -307,14 +351,33 @@ export default class BalanceOperation {
       for (let j of duplicates_list[i]) {
         costs_array.push([]);
         for (let k of sift_duplicates[i]) {
-          current_cost = CalculateTransferCost(
-            [
-              "SHIP",
-              where_each_container_is.get(j)[0],
-              where_each_container_is.get(j)[1],
-            ],
-            ["SHIP", k[0], k[1]]
-          );
+          //We have to check whether the container we're looking at is in the buffer or ship to do the right CalculateTransferCost()
+          if (where_each_container_is.get(j)[1] <= 23) {
+            //The contaier we're looking at is on the buffer
+            current_cost = CalculateTransferCost(
+              [
+                "BUFFER",
+                where_each_container_is.get(j)[0],
+                where_each_container_is.get(j)[1],
+              ],
+              ["SHIP", k[0], k[1]]
+            );
+          } else if (where_each_container_is.get(j)[1] >= 27) {
+            //The container we're looking at is on the ship
+            current_cost = CalculateTransferCost(
+              [
+                "SHIP",
+                where_each_container_is.get(j)[0],
+                where_each_container_is.get(j)[1],
+              ],
+              ["SHIP", k[0], k[1]]
+            );
+          } else {
+            //The container we're looking at is on the ship. But that should never happen, so we throw an error
+            throw new Error(
+              "There is a container on the bridge. This should not be allowed. Check the conditions for allowing specific operations on states."
+            );
+          }
           if (current_cost < minimum_cost) {
             minimum_cost = current_cost;
           }
@@ -322,6 +385,19 @@ export default class BalanceOperation {
         }
       }
       total_cost += minimum_cost * duplicates_list[i].length;
+      for (let l of duplicates_list[i]) {
+        if (where_each_container_is.get(l)[1] <= 23) {
+          total_cost +=
+            CalculateTransferCost(
+              [
+                "BUFFER",
+                where_each_container_is.get(l)[0],
+                where_each_container_is.get(l)[1],
+              ],
+              ["SHIP", 1, 27]
+            ) - minimum_cost;
+        }
+      }
     }
     let is_goal_state = true;
     for (let i of costs_array) {
@@ -355,49 +431,96 @@ export default class BalanceOperation {
                 newGrid[k] = state.grid[k];
               }
             }
-            let temp = newGrid[finalY][j];
-            newGrid[finalY][j] = newGrid[originalY][i];
-            newGrid[originalY][i] = temp;
-            let key = this.CreateKey(newGrid, j, finalY);
-            if (!this.visitedStates.has(key)) {
-              let currCost = this.CalculateCost(
-                state.craneX,
-                state.craneY,
-                i,
-                j,
-                state.topContainer
-              );
-              let newState = new BalanceShipState(
-                newGrid,
-                j,
-                finalY,
-                state,
-                state.gCost + currCost,
-                this.BalanceHeuristic(
+            //These conditions are restricting some container movements. It prevents 2 cases. The first case is a container  being moved a row above the buffer's top row. The second case is a container  being placed at or above the bridge. The bridge is 3 columns from index 24 to 26 on row that connect the ship and buffer.
+            if (!(j <= 26 && finalY <= 1)) {
+              let temp = newGrid[finalY][j];
+              newGrid[finalY][j] = newGrid[originalY][i];
+              newGrid[originalY][i] = temp;
+              let key = this.CreateKey(newGrid, j, finalY);
+              if (!this.visitedStates.has(key)) {
+                let currCost = this.CalculateCost(
+                  state.craneX,
+                  state.craneY,
+                  i,
+                  j,
+                  state.topContainer
+                );
+                let newState = new BalanceShipState(
                   newGrid,
-                  this.lowerBound,
-                  this.upperBound
-                ),
-                "Move the crane to " +
-                  "(" +
-                  (10 - originalY) +
-                  ", " +
-                  (i + 1) +
-                  ") on the ship and move the container to (" +
-                  (10 - finalY) +
-                  ", " +
-                  (j + 1) +
-                  ") (Estimate: " +
-                  currCost +
-                  " minutes)",
-                key
-              );
-              this.frontier.add(newState);
+                  j,
+                  finalY,
+                  state,
+                  state.gCost + currCost,
+                  this.BalanceHeuristic(
+                    newGrid,
+                    this.lowerBound,
+                    this.upperBound
+                  ),
+                  this.MoveContainerMessage(originalY, i, finalY, j, currCost),
+                  key
+                );
+                this.frontier.add(newState);
+              }
             }
           }
         }
       }
     }
+  }
+  // Create output message for an operation
+  MoveContainerMessage(originalY, i, finalY, j, currCost) {
+    let extraMessage = "";
+    let message = "Move the crane to ("; //We have to find out whether the container we are moving is on the ship or buffer
+    let container_is_on_ship; //This flag variable is used later on for formatting purposes
+    if (i <= 23) {
+      //This means the container we are moving is on the buffer
+      extraMessage += "buffer ";
+      i += 1; //+1 is to convert from index to column
+      originalY = 6 - originalY;
+      container_is_on_ship = false;
+    } else if (i >= 26) {
+      //This means the container we are moving is on the ship
+      extraMessage += "ship ";
+      i = i - 27 + 1; //+1 is to convert from index to column
+      originalY = 10 - originalY;
+      container_is_on_ship = true;
+    } else {
+      //If neither on the buffer or ship, that means its on the bridge which should be impossible. So an error is thrown
+      throw new Error(
+        "There is a container on the bridge. This should not be allowed. Check the conditions for allowing specific operations on states."
+      );
+    }
+    message +=
+      originalY +
+      ", " +
+      i +
+      ") on the " +
+      extraMessage +
+      "and move the container to ";
+    extraMessage = "";
+    //These two if statements are when we move from the ship to the buffer or vice versa. The message string is appended with more information to clarify where the coordinates belong.
+    if (container_is_on_ship && j <= 23) {
+      extraMessage += " on the buffer";
+    } else if (!container_is_on_ship && j >= 26) {
+      extraMessage += "on the ship";
+    }
+    //We need to readjust the coordinates for the location we're moving the container
+    if (j <= 23) {
+      //This means the container we are moving is on the buffer
+      j += 1; //+1 is to convert from index to column
+      finalY = 6 - finalY;
+    } else if (j >= 26) {
+      //This means the container we are moving is on the ship
+      j = j - 27 + 1; //+1 is to convert from index to column
+      finalY = 10 - finalY;
+    } else {
+      //If neither on the buffer or ship, that means its on the bridge which should be impossible. So an error is thrown
+      throw new Error(
+        "You are trying to move a container onto the bridge. This should not be allowed. Check the conditions for allowing specific operations on states."
+      );
+    }
+    message += "(" + finalY + ", " + j + ")";
+    return message + extraMessage + " (Estimate: " + currCost + " minutes)";
   }
   // Operation function that expands the given SIFT state
   ExpandSIFTState(state) {
@@ -423,42 +546,35 @@ export default class BalanceOperation {
                 newGrid[k] = state.grid[k];
               }
             }
-            let temp = newGrid[finalY][j];
-            newGrid[finalY][j] = newGrid[originalY][i];
-            newGrid[originalY][i] = temp;
-            let key = this.CreateKey(newGrid, j, finalY);
-            if (!this.visitedStates.has(key)) {
-              let heuristicResults = this.SIFTHeuristic(newGrid);
-              let currCost = this.CalculateCost(
-                state.craneX,
-                state.craneY,
-                i,
-                j,
-                state.topContainer
-              );
-              let newState = new BalanceShipState(
-                newGrid,
-                j,
-                finalY,
-                state,
-                state.gCost + currCost,
-                heuristicResults[0],
-                "Move crane to " +
-                  "(" +
-                  (10 - originalY) +
-                  ", " +
-                  (i + 1) +
-                  ") on ship and move container to (" +
-                  (10 - finalY) +
-                  ", " +
-                  (j + 1) +
-                  ") (Estimate  " +
-                  currCost +
-                  " minutes)",
-                key,
-                heuristicResults[1]
-              );
-              this.frontier.add(newState);
+            //These conditions are restricting some container movements. It prevents 2 cases. The first case is a container  being moved a row above the buffer's top row. The second case is a container  being placed at or above the bridge. The bridge is 3 columns from index 24 to 26 on row that connect the ship and buffer.
+            //if (!(j <= 26 && finalY <= 1)) {
+            if (j >= 27) {
+              let temp = newGrid[finalY][j];
+              newGrid[finalY][j] = newGrid[originalY][i];
+              newGrid[originalY][i] = temp;
+              let key = this.CreateKey(newGrid, j, finalY);
+              if (!this.visitedStates.has(key)) {
+                let currCost = this.CalculateCost(
+                  state.craneX,
+                  state.craneY,
+                  i,
+                  j,
+                  state.topContainer
+                );
+                let hcost = this.SIFTHeuristic(newGrid);
+                let newState = new BalanceShipState(
+                  newGrid,
+                  j,
+                  finalY,
+                  state,
+                  state.gCost + currCost,
+                  hcost[0],
+                  this.MoveContainerMessage(originalY, i, finalY, j, currCost),
+                  key,
+                  hcost[1]
+                );
+                this.frontier.add(newState);
+              }
             }
           }
         }
@@ -467,38 +583,24 @@ export default class BalanceOperation {
   }
   // Balance A* search with frontier and map for visited states
   BalanceOperationSearch() {
-    if (this.numberOfContainers >= 48) {
-      //If the ship is half full or more we need to use operations that move containers to the buffer.
-      let balanceJobWithBuffer = new BalanceOperationWithBuffer(
-        this.originalGrid
-      );
-      balanceJobWithBuffer.BalanceOperationSearch(); //This BalanceOperationSearch function is from another class, not this one
-      this.goalState = balanceJobWithBuffer.goalState;
-      this.operationList = balanceJobWithBuffer.operationList;
-      this.gridList = balanceJobWithBuffer.gridList;
-      this.bufferGridList = balanceJobWithBuffer.bufferGridList;
-      this.balanceMode = balanceJobWithBuffer.balanceMode;
+    console.log("BUFFER VER");
+    if (this.startState.hCost === Number.MAX_SAFE_INTEGER) {
+      this.SIFTOperationSearch();
     } else {
-      // The solution won't require using the buffer. Therefore, we don't consider any operations that move containers to the buffer.
-      if (this.startState.hCost === Number.MAX_SAFE_INTEGER) {
-        this.SIFTOperationSearch();
-      } else {
-        this.frontier.add(this.startState);
-        this.visitedStates.add(this.startState.grid);
-        while (this.frontier.heap.length > 0) {
-          let currState = this.frontier.remove();
-          if (currState.hCost === 0) {
-            this.CreateLists(currState);
-            this.goalState = currState;
-            break;
-          }
-          this.ExpandBalanceState(currState);
+      this.frontier.add(this.startState);
+      this.visitedStates.add(this.startState.grid);
+      while (this.frontier.heap.length > 0) {
+        let currState = this.frontier.remove();
+        if (currState.hCost === 0) {
+          this.CreateLists(currState);
+          this.goalState = currState;
+          break;
         }
+        this.ExpandBalanceState(currState);
       }
     }
   }
   // SIFT A* search for frontier and map for visited states
-  // Currently has no heuristic so appears to take too long to test
   SIFTOperationSearch() {
     let startHeuristic = this.SIFTHeuristic(this.startState.grid);
     this.startState.hCost = startHeuristic[0];
@@ -535,8 +637,13 @@ export default class BalanceOperation {
   // Convert grid into a flat list of integers
   ConvertGrid(grid) {
     let IDList = [];
+    for (let i = 2; i < 6; i++) {
+      for (let j = 0; j < 24; j++) {
+        IDList.push(this.GetContainerID(grid[i][j].name));
+      }
+    }
     for (let i = 0; i < 10; i++) {
-      for (let j = 0; j < 12; j++) {
+      for (let j = 27; j < 39; j++) {
         IDList.push(this.GetContainerID(grid[i][j].name));
       }
     }
