@@ -2,7 +2,12 @@ import Container from "./Container.js";
 //import fs from "fs";
 
 export default class ManifestGridTranslator {
+  constructor() {
+    this.numContainers = 0;
+  }
+
   ConvertManifestToGrid(fileInputString) {
+    this.numContainers = 0;
     //Initialize grid of containers
     let grid = [];
     for (let i = 0; i < 10; i++) {
@@ -46,6 +51,15 @@ export default class ManifestGridTranslator {
         index = indexOfNewline + 2;
       }
     }
+
+    for(let i = 0; i < grid.length; i++) {
+      for(let j = 0; j < grid[i].length; j++) {
+        if(grid[i][j].name != "UNUSED" && grid[i][j].name != "NAN") {
+          this.numContainers += 1;
+        }
+      }
+    }
+
     return grid;
   }
 

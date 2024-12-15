@@ -55,15 +55,14 @@ function App() {
       const translator = new ManifestGridTranslator();
       let grid = translator.ConvertManifestToGrid(fileString);
       setGrids([grid]); // Update the state
+      addLog(
+        "Manifest " +
+          event.target.files[0].name +
+          " is opened, there are " +
+          translator.numContainers +
+          " containers on the ship"
+      );
     };
-
-    addLog(
-      "Manifest " +
-        event.target.files[0].name +
-        " is opened, there are " +
-        "?" +
-        " containers on the ship"
-    );
 
     setIsActive(true);
   };
